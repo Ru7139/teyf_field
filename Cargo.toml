@@ -14,7 +14,7 @@ walkdir = "*"
 rayon = "*"
 
 actix = "*"
-axum = "*"
+axum = { version = "*", features = ["ws"] }
 
 reqwest = { version = "*", features = ["json"] }
 
