@@ -39,3 +39,5 @@ async fn random_destination_try(url: &str, client: reqwest::Client) -> Result<()
     dbg!(rsps.text().await.unwrap());
     Ok(())
 }
+
+// ---- ---- ---- ---- ---- else assert defiended ---- ---- ---- ---- ----
