@@ -1,0 +1,31 @@
+[package]
+name = "teyf_field"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+serde = { version = "*", features = ["derive"] }
+serde_json = "*"
+serde_urlencoded = "*"
+
+tokio = { version = "*", features = ["full"] }
+
+walkdir = "*"
+rayon = "*"
+
+actix = "*"
+axum = "*"
+
+reqwest = { version = "*", features = ["json"] }
+
+surrealdb = "*"
+
+quick-xml = "*"
+calamine = "*"
+zip = "*"
+docx-rs = "*"
+
+tauri = "*"
+dioxus = "*"
+
+rand = "*"

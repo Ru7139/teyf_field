@@ -1,0 +1,6 @@
+/target
+/src/course/mike_code/surrealdb_tutorial/surrealdb_basic/ruut_basic_db
+Cargo.lock
+
+.DS_Store
+**/.DS_Store
