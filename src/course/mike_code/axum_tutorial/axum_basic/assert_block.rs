@@ -2,6 +2,7 @@ use reqwest::StatusCode;
 
 use super::struct_def::WebStateResponse;
 
+#[rustfmt::skip]
 pub async fn server_basic_check(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
     let rsps_main = client.get(format!("{}/xindex", url)).send().await?;
@@ -13,8 +14,7 @@ pub async fn server_basic_check(url: &str) -> Result<(), Box<dyn std::error::Err
 
     assert_eq!(rsps_main.text().await?, "TEST: Hello, world");
     assert_eq!(rsps_user.text().await?, "TEST: Here is user profile");
-    assert_eq!(
-        rsps_bag.text().await?,
+    assert_eq!(rsps_bag.text().await?,
         serde_json::to_string(&WebStateResponse::new_moon_ship_response())?
     );
 
