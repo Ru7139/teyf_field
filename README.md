@@ -1,2 +1,2 @@
-# A Rust test filed
+# A rust test filed
 For rust beginner
