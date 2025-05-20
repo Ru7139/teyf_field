@@ -19,6 +19,8 @@ mod project {
         let app = app(tx);
         let web_listener = tokio::net::TcpListener::bind("127.0.0.1:8081").await?;
 
+        // axum::serve(web_listener, app).await?;
+
         tokio::spawn(async move {
             axum::serve(web_listener, app).await.unwrap();
         });
