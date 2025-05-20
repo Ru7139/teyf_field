@@ -10,11 +10,20 @@ mod project {
         routing::get,
     };
     use futures_util::{SinkExt, StreamExt};
-    use tokio::sync::broadcast::Sender;
+    use tokio::sync::broadcast::{Sender, channel};
     use tower_http::cors::{Any, CorsLayer};
 
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
+        let (tx, _) = channel(100);
+        let app = app(tx);
+        let web_listener = tokio::net::TcpListener::bind("127.0.0.1:8081").await?;
+
+        tokio::spawn(async move {
+            axum::serve(web_listener, app).await.unwrap();
+        });
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         Ok(())
     }
 
@@ -46,5 +55,16 @@ mod project {
                 sender.send(Message::from(msg)).await.unwrap();
             }
         });
+
+        while let Some(msg) = receiver.next().await {
+            if let Ok(msg) = msg {
+                match msg {
+                    Message::Text(content) => {
+                        tx.send(content.to_string()).unwrap();
+                    }
+                    _ => (),
+                }
+            }
+        }
     }
 }
