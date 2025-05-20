@@ -29,3 +29,6 @@ tauri = "*"
 dioxus = "*"
 
 rand = "*"
+
+futures-util = "*"
+tower-http = { version = "*", features = ["cors"] }
