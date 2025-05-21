@@ -26,7 +26,7 @@ mod count_lines_of_all_rs_file_below {
             .par_iter()
             .map(|path| count_lines_closure(path).unwrap_or(0))
             .sum();
-        let not_by_myself_lines = 20601usize;
+        let not_by_myself_lines = 20597usize;
         dbg!(total_lines - not_by_myself_lines);
         dbg!(exec_timestamp.elapsed());
         Ok(())

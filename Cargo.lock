@@ -2660,7 +2660,7 @@ version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330c60081dcc4c72131f8eb70510f1ac07223e5d4163db481a04a0befcffa412"
 dependencies = [
- "libloading 0.7.4",
+ "libloading 0.8.7",
 ]
 
 [[package]]
@@ -7867,6 +7867,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "serde-xml-rs"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "176b7ff880ab6ead7a020e773e9c096467fe347615a3e22ac29300cbdef67a5d"
+dependencies = [
+ "log",
+ "serde",
+ "thiserror 1.0.69",
+ "xml-rs",
+]
+
+[[package]]
 name = "serde_derive"
 version = "1.0.219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9129,6 +9141,7 @@ dependencies = [
  "rayon",
  "reqwest 0.12.15",
  "serde",
+ "serde-xml-rs",
  "serde_json",
  "serde_urlencoded",
  "surrealdb",
