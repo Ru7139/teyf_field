@@ -47,55 +47,55 @@ fn Home() -> Element {
     });
 
     rsx!(if !has_name() {
-        div { class: "chat-container",
-            div { class: "chat input-name",
-                input {
-                    r#type: "text",
-                    value: name,
-                    placeholder: "Enter Your Name ...",
-                    oninput: move |e| name.set(e.value())
-                }
-                button {
-                    onclick: move |_| has_name.set(true),
-                    disabled: if name().trim() == "" {true},
-                    "Join Chat"
+            div { class: "chat-container",
+                div { class: "chat input-name",
+                    input {
+                        r#type: "text",
+                        value: name,
+                        placeholder: "Enter Your Name ...",
+                        oninput: move |e| name.set(e.value())
+                    }
+                    button {
+                        onclick: move |_| has_name.set(true),
+                        disabled: if name().trim() == "" {true},
+                        "Join Chat"
+                    }
                 }
             }
-        }
-    } else {
-                div { class: "chat-container",
-                    div { class: "chat",
-                        div { class: "message-container",
-                            {
-                                message_list()
-                                    .iter()
-                                    .rev()
-                                    .map(|item| {
-                                        let username = item.split(":").collect::<Vec<&str>>()[0];
-                                        rsx! {
-                                            p { class: "message-item", class: if username == name() { "user-message" }, "{item}" }
-                                        }
-                                    })
-                            }
+        } else {
+            div { class: "chat-container",
+                div { class: "chat",
+                    div { class: "message-container",
+                        {
+                            message_list()
+                                .iter()
+                                .rev()
+                                .map(|item| {
+                                    let username = item.split(":").collect::<Vec<&str>>()[0];
+                                    rsx! {
+                                        p { class: "message-item", class: if username == name() { "user-message" }, "{item}" }
+                                    }
+                                })
                         }
-                        div { class: "input-container",
-                            input {
-                                r#type: "text",
-                                value: message_content,
-                                placeholder: name,
-                                oninput: move |e| message_content.set(e.value()),
-                            }
-                            button {
-                                onclick: move |_| {
-                                    chat_client.send(message_content());
-                                    message_content.set(String::new());
-                                },
-                                disabled: if message_content().trim() == "" { true },
-                                "Send"
-                            }
+                    }
+                    div { class: "input-container",
+                        input {
+                            r#type: "text",
+                            value: message_content,
+                            placeholder: name,
+                            oninput: move |e| message_content.set(e.value()),
+                        }
+                        button {
+                            onclick: move |_| {
+                                chat_client.send(message_content());
+                                message_content.set(String::new());
+                            },
+                            disabled: if message_content().trim() == "" { true },
+                            "Send"
                         }
                     }
                 }
-    }
+            }
+        }
     )
 }
