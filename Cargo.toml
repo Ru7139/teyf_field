@@ -32,3 +32,5 @@ rand = "*"
 
 futures-util = "*"
 tower-http = { version = "*", features = ["cors"] }
+
+plotters = "*"
