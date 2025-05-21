@@ -5,7 +5,7 @@ mod project {
             State, WebSocketUpgrade,
             ws::{Message, WebSocket},
         },
-        http::{HeaderValue, StatusCode},
+        http::HeaderValue,
         response::IntoResponse,
         routing::get,
     };
@@ -19,11 +19,11 @@ mod project {
         let app = app(tx);
         let web_listener = tokio::net::TcpListener::bind("127.0.0.1:8081").await?;
 
-        axum::serve(web_listener, app).await?;
+        // axum::serve(web_listener, app).await?;
 
-        // tokio::spawn(async move {
-        //     axum::serve(web_listener, app).await.unwrap();
-        // });
+        tokio::spawn(async move {
+            axum::serve(web_listener, app).await.unwrap();
+        });
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         Ok(())
@@ -45,7 +45,6 @@ mod project {
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
         ws.on_upgrade(|web_socket| handle_websocket(tx, web_socket))
-        // (StatusCode::OK, "Hello").into_response()
     }
 
     async fn handle_websocket(tx: Sender<String>, websocket: WebSocket) {
