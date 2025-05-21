@@ -19,11 +19,11 @@ mod project {
         let app = app(tx);
         let web_listener = tokio::net::TcpListener::bind("127.0.0.1:8081").await?;
 
-        // axum::serve(web_listener, app).await?;
+        axum::serve(web_listener, app).await?;
 
-        tokio::spawn(async move {
-            axum::serve(web_listener, app).await.unwrap();
-        });
+        // tokio::spawn(async move {
+        //     axum::serve(web_listener, app).await.unwrap();
+        // });
 
         tokio::time::sleep(std::time::Duration::from_secs(1)).await;
         Ok(())
@@ -32,7 +32,7 @@ mod project {
     fn app(tx: Sender<String>) -> Router {
         let cors_layer = CorsLayer::new()
             .allow_methods(Any)
-            .allow_origin("http://127.0.0.1:8080".parse::<HeaderValue>().unwrap());
+            .allow_origin("http://127.0.0.1:12345".parse::<HeaderValue>().unwrap());
         Router::new()
             .route("/", get(|| async { "Home" }))
             .route("/chat", get(chat_handler))
@@ -44,8 +44,8 @@ mod project {
         State(tx): State<Sender<String>>,
         ws: WebSocketUpgrade,
     ) -> impl IntoResponse {
-        ws.on_upgrade(|web_socket| handle_websocket(tx, web_socket));
-        (StatusCode::OK, "Hello").into_response()
+        ws.on_upgrade(|web_socket| handle_websocket(tx, web_socket))
+        // (StatusCode::OK, "Hello").into_response()
     }
 
     async fn handle_websocket(tx: Sender<String>, websocket: WebSocket) {

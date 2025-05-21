@@ -1,46 +1,77 @@
-/* App-wide styling */
-body {
-    background-color: #0f1116;
-    color: #ffffff;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 20px;
+* {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
 }
 
-#hero {
-    margin: 0;
+.chat-container {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    height: 100vh;
+    background-color: oklch(98.4% 0.003 247.858);
 }
 
-#links {
-    width: 400px;
-    text-align: left;
-    font-size: x-large;
-    color: white;
+.chat {
+    width: 60%;
+    height: 80%;
+    background-color: white;
+    position: relative;
+    border-radius: 10px;
+    box-shadow: 2px 2px 3px 3px gray;
+}
+
+.message-container {
+    padding: 5px 10px;
+    max-width: 100%;
+    height: 95%;
+    max-height: 100%;
+
+    overflow: auto;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
 }
 
-#links a {
+.message-item {
+    font-size: 20px;
+    background-color: oklch(86.9% 0.022 252.894);
     color: white;
-    text-decoration: none;
-    margin-top: 20px;
-    margin: 10px 0px;
-    border: white 1px solid;
     border-radius: 5px;
-    padding: 10px;
+    padding: 3px;
+    margin-bottom: 5px;
 }
 
-#links a:hover {
-    background-color: #1f1f1f;
+.user-message {
+    background-color: oklch(82.8% 0.111 230.318);
+}
+
+.input-container {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 5%;
+}
+
+input {
+    width: 70%;
+    height: 100%;
+    padding: 5px;
+    border-radius: 5px;
+}
+button {
+    width: 30%;
+    border: none;
+    outline: none;
+    padding: 5px;
+    background-color: dodgerblue;
+    height: 100%;
+    border-radius: 5px;
     cursor: pointer;
 }
-
-#header {
-    max-width: 1200px;
+button:hover {
+    opacity: 80%;
 }
 
-
-
+.input-name {
+    height: 5%;
+}
