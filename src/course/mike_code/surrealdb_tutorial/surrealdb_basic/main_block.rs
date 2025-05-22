@@ -2,12 +2,12 @@ mod project {
     use serde::{Deserialize, Serialize};
     use surrealdb::{RecordId, engine::remote::ws::Ws, opt::auth::Root};
 
-    use super::super::db;
+    use super::super::sdb_tools;
 
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let db_port: u16 = 17779u16;
-        let mut command = db::CommandLines::new(db_port);
+        let mut command = sdb_tools::CommandLines::new(db_port);
         command.db_start();
         command.display_child_and_command();
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
