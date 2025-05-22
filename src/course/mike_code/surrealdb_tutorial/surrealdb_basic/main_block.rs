@@ -12,7 +12,15 @@ mod project {
         command.display_child_and_command();
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
-        let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", db_port)).await?;
+        test_content(db_port).await?;
+
+        command.kill_child();
+
+        Ok(())
+    }
+
+    async fn test_content(sdb_port: u16) -> Result<(), Box<dyn std::error::Error>> {
+        let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", sdb_port)).await?;
 
         sdb.signin(Root {
             username: "ruut",
@@ -67,22 +75,23 @@ mod project {
         let person: Vec<Option<User>> = sdb.select("user").await?;
         person.iter().for_each(|x| println!("{:?}", x));
 
-        command.kill_child();
-
         Ok(())
     }
 
+    #[allow(unused)]
     #[derive(Debug, Serialize, Deserialize)]
     struct Person {
         name: String,
         age: u32,
     }
 
+    #[allow(unused)]
     #[derive(Debug, Serialize, Deserialize, Clone)]
     struct Record {
         id: RecordId,
     }
 
+    #[allow(unused)]
     #[derive(Debug, Serialize, Deserialize)]
     struct User {
         id: RecordId,
