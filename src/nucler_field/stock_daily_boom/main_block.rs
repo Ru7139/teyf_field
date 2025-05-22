@@ -1,7 +1,9 @@
 pub mod project {
+    use super::super::data_form::*;
     use super::super::func_tool_chain::*;
+    use chrono::prelude::*;
 
-    pub async fn main_bit() -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn main_fetch_data() -> Result<(), Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
         let tushare_url = "http://api.tushare.pro";
         let api_name = "daily";
@@ -54,6 +56,103 @@ pub mod project {
         }
 
         dbg!(start_time.elapsed());
+        Ok(())
+    }
+
+    pub async fn main_deconstruct_local_data_try() -> Result<(), Box<dyn std::error::Error>> {
+        let exe_start = std::time::Instant::now();
+
+        //反序列化，得到信息
+        let file_folder = "/Users/chenzhi/Desktop/Rust/teyf_field/src/nucler_field/stock_daily_boom/download_file";
+        let file_name = "response_20240102_Week[Tue]";
+        let file_abs_path = format!("{}/{}", file_folder, file_name);
+        let file_data = std::fs::read_to_string(file_abs_path)?;
+        let file_deseril_json: TushareJson = serde_json::from_str(&file_data)?;
+
+        //处理额外信息
+        #[allow(unused)]
+        let extra_info = ExtraInfo {
+            extra_request_id: file_deseril_json.request_id,
+            extra_response_code: file_deseril_json.code,
+            extra_fields_info: file_deseril_json.data.fields.clone(),
+        };
+
+        //拆分信息，将值以struct保存到vec中
+        let stock_list_in_one_day: Vec<StockDayK> = file_deseril_json
+            .data
+            .items
+            .iter()
+            .map(|x| {
+                let ts_code = &x.0;
+                let trade_date: u32 = x.1.parse().unwrap();
+                let ts_open = x.2;
+                let ts_high = x.3;
+                let ts_low = x.4;
+                let ts_close = x.5;
+                let ts_change = x.6;
+                let ts_pct_chg = x.7;
+                let ts_vol = x.8;
+                let ts_amount = x.9;
+
+                let ts_code_match_re = ts_code.split('.').nth(1).unwrap();
+
+                let stock_basic = StBasic {
+                    exchange_code: match ts_code_match_re {
+                        "SH" => ExcCode::SH,
+                        "SZ" => ExcCode::SZ,
+                        "BJ" => ExcCode::BJ,
+                        _ => panic!("Stock is not from SH, SZ or BJ"),
+                    },
+                    exchange_name: match ts_code_match_re {
+                        "SH" => ExcName::Shanghai,
+                        "SZ" => ExcName::Shenzhen,
+                        "BJ" => ExcName::Beijing,
+                        _ => panic!("Stock is not from SH, SZ or BJ"),
+                    },
+                    stock_code: ts_code.split('.').nth(0).unwrap().to_string(),
+                };
+
+                let stock_date = StDate {
+                    year: trade_date / 10000,
+                    month: (trade_date / 100) % 100,
+                    day: trade_date % 100,
+                    weekday: match chrono::NaiveDate::parse_from_str(
+                        &trade_date.to_string(),
+                        "%Y%m%d",
+                    ) {
+                        Ok(date) => match date.weekday() {
+                            chrono::Weekday::Mon => StWeekday::Monday,
+                            chrono::Weekday::Tue => StWeekday::Tuesday,
+                            chrono::Weekday::Wed => StWeekday::Wednesday,
+                            chrono::Weekday::Thu => StWeekday::Thursday,
+                            chrono::Weekday::Fri => StWeekday::Friday,
+                            _ => panic!("Saturday or Sunday should be market-closed"),
+                        },
+                        Err(_) => panic!("Failed to parse date"),
+                    },
+                };
+
+                let stock_daily = StDaily {
+                    open: ts_open,
+                    close: ts_close,
+                    high: ts_high,
+                    low: ts_low,
+                    price_change: ts_change,
+                    price_percent: ts_pct_chg,
+                    volume: ts_vol,
+                    amount: ts_amount,
+                };
+
+                StockDayK {
+                    basic: stock_basic,
+                    date: stock_date,
+                    daily: stock_daily,
+                }
+            })
+            .collect();
+
+        dbg!(stock_list_in_one_day[0].clone());
+
         Ok(())
     }
 }
