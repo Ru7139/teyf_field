@@ -9,6 +9,7 @@ serde_json = "*"
 serde_urlencoded = "*"
 serde-xml-rs = "*"
 
+chrono = "*"
 
 tokio = { version = "*", features = ["full"] }
 

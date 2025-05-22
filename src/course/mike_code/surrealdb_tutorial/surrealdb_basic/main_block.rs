@@ -7,6 +7,7 @@ mod project {
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let db_port: u16 = 17779u16;
+
         let mut command = sdb_tools::CommandLines::new(db_port);
         command.db_start();
         command.display_child_and_command();
