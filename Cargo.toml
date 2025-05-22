@@ -36,4 +36,4 @@ futures-util = "*"
 tower-http = { version = "*", features = ["cors"] }
 
 plotters = "*"
-freya = "*"
+#freya = "*"

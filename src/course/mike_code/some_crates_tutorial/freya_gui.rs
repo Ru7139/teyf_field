@@ -1,5 +1,5 @@
 mod project {
-    use freya::prelude::*;
+    // use freya::prelude::*;
 
     #[test]
     fn main() {
@@ -26,35 +26,35 @@ mod project {
         }
     }
 
-    #[allow(unused)]
-    fn app() -> Element {
-        let mut count = use_signal(|| 0i64);
+    // #[allow(unused)]
+    // fn app() -> Element {
+    //     let mut count = use_signal(|| 0i64);
 
-        rsx!(
-            rect {
-                width: "100%",
-                height: "50%",
-                main_align: "center",
-                cross_align: "center",
-                background: "blue",
-                color: "white",
-                label { font_size: "70%", "{count}"}
-            }
-            rect {
-                width: "100%",
-                height: "50%",
-                main_align: "center",
-                cross_align: "center",
-                direction: "horizontal",
-                Button {
-                    onclick: move |_| count += 1,
-                    label {"Increase"}
-                }
-                Button {
-                    onclick: move |_| count -= 1,
-                    label { "Decrease" }
-                }
-            }
-        )
-    }
+    //     rsx!(
+    //         rect {
+    //             width: "100%",
+    //             height: "50%",
+    //             main_align: "center",
+    //             cross_align: "center",
+    //             background: "blue",
+    //             color: "white",
+    //             label { font_size: "70%", "{count}"}
+    //         }
+    //         rect {
+    //             width: "100%",
+    //             height: "50%",
+    //             main_align: "center",
+    //             cross_align: "center",
+    //             direction: "horizontal",
+    //             Button {
+    //                 onclick: move |_| count += 1,
+    //                 label {"Increase"}
+    //             }
+    //             Button {
+    //                 onclick: move |_| count -= 1,
+    //                 label { "Decrease" }
+    //             }
+    //         }
+    //     )
+    // }
 }

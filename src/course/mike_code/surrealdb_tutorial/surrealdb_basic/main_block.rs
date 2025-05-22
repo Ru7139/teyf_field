@@ -6,21 +6,21 @@ mod project {
 
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
-        let db_port: u16 = 7778u16;
+        let db_port: u16 = 17779u16;
         db::db_start(db_port).await;
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
-        let db = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", db_port)).await?;
+        let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", db_port)).await?;
 
-        db.signin(Root {
+        sdb.signin(Root {
             username: "ruut",
             password: "ruut",
         })
         .await?;
 
-        db.use_ns("alpha_ns").use_db("alpha_db").await?;
+        sdb.use_ns("alpha_ns").use_db("alpha_db").await?;
 
-        let record1: Option<Record> = db
+        let record1: Option<Record> = sdb
             .create("user")
             .content(Person {
                 name: "Jonmo".into(),
@@ -28,7 +28,7 @@ mod project {
             })
             .await?;
 
-        let record2: Option<Record> = db
+        let record2: Option<Record> = sdb
             .create("user")
             .content(Person {
                 name: "Yacci".into(),
@@ -39,20 +39,20 @@ mod project {
         dbg!(&record1.as_ref().unwrap().id);
         dbg!(&record2.as_ref().unwrap().id);
 
-        let person: Vec<Option<User>> = db.select("user").await?;
+        let person: Vec<Option<User>> = sdb.select("user").await?;
         person.iter().for_each(|x| println!("{:?}", x));
 
-        let person1: Option<User> = db
+        let person1: Option<User> = sdb
             .select(("user", record1.as_ref().unwrap().id.key().to_string()))
             .await?;
         dbg!(&person1);
 
-        let person_deleted: Option<User> = db
+        let person_deleted: Option<User> = sdb
             .delete(("user", record1.as_ref().unwrap().id.key().to_string()))
             .await?;
         dbg!("person deleted", &person_deleted);
 
-        let person_update: Option<User> = db
+        let person_update: Option<User> = sdb
             .update(("user", record2.as_ref().unwrap().id.key().to_string()))
             .content(User {
                 name: "Anne".into(),
@@ -62,7 +62,7 @@ mod project {
             .await?;
         dbg!("person updated", &person_update);
 
-        let person: Vec<Option<User>> = db.select("user").await?;
+        let person: Vec<Option<User>> = sdb.select("user").await?;
         person.iter().for_each(|x| println!("{:?}", x));
 
         // let _ = child.kill();
