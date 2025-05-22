@@ -7,7 +7,9 @@ mod project {
     #[tokio::test]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let db_port: u16 = 17779u16;
-        db::db_start(db_port).await;
+        let mut command = db::CommandLines::new(db_port);
+        command.db_start();
+        command.display_child_and_command();
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
         let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", db_port)).await?;
@@ -65,8 +67,7 @@ mod project {
         let person: Vec<Option<User>> = sdb.select("user").await?;
         person.iter().for_each(|x| println!("{:?}", x));
 
-        // let _ = child.kill();
-        // dbg!("command line offline");
+        command.kill_child();
 
         Ok(())
     }
