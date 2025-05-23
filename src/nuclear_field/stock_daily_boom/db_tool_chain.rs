@@ -39,6 +39,6 @@ impl SdbController {
     pub fn display_child_and_command(&self) {
         dbg!(&self.port);
         dbg!(&self.command);
-        dbg!(&self.child);
+        // dbg!(&self.child);
     }
 }

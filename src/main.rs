@@ -1,3 +1,4 @@
+mod atomic_fusion;
 mod course;
 mod metextbook;
 mod nuclear_field;
