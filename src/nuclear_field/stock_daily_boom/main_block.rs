@@ -1,7 +1,14 @@
 pub mod project {
+    use crate::nuclear_field::stock_daily_boom::db_tool_chain;
+
     use super::super::data_form::*;
     use super::super::func_tool_chain::*;
     use chrono::prelude::*;
+    use rayon::iter::IntoParallelRefIterator;
+    use rayon::iter::ParallelIterator;
+    use serde::{Deserialize, Serialize};
+    use surrealdb::RecordId;
+    use surrealdb::engine::remote::ws::Ws;
 
     pub async fn main_fetch_data() -> Result<(), Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
@@ -59,14 +66,15 @@ pub mod project {
         Ok(())
     }
 
-    pub async fn main_deconstruct_local_data_try() -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn main_deconstruct_local_data_try()
+    -> Result<Vec<StockDayK>, Box<dyn std::error::Error>> {
         let exe_start = std::time::Instant::now();
 
         //反序列化，得到信息
-        let file_folder = "/Users/chenzhi/Desktop/Rust/teyf_field/src/nucler_field/stock_daily_boom/download_file";
+        let file_folder = "/Users/chenzhi/Desktop/Rust/teyf_field/src/nuclear_field/stock_daily_boom/download_file";
         let file_name = "response_20240102_Week[Tue]";
         let file_abs_path = format!("{}/{}", file_folder, file_name);
-        let file_data = std::fs::read_to_string(file_abs_path)?;
+        let file_data = std::fs::read_to_string(file_abs_path).expect("can not read path");
         let file_deseril_json: TushareJson = serde_json::from_str(&file_data)?;
 
         //处理额外信息
@@ -151,8 +159,41 @@ pub mod project {
             })
             .collect();
 
-        dbg!(stock_list_in_one_day[0].clone());
+        // dbg!(stock_list_in_one_day[0].clone());
 
+        Ok(stock_list_in_one_day)
+    }
+
+    pub async fn push_dayk_into_sdb_try(
+        stock_vec: Vec<StockDayK>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let exe_time = std::time::Instant::now();
+        let port: u16 = 13344;
+        let mut cmd = db_tool_chain::SdbController::new(port);
+        cmd.start().expect("can not find surreal database");
+        // cmd.display_child_and_command();
+
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        // print!("Connected sdb, timer: [{:?}]", exe_time.elapsed());
+        // tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+
+        let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+        sdb.signin(surrealdb::opt::auth::Root {
+            username: "ruut_stock",
+            password: "ruut_stock",
+        })
+        .await?;
+        sdb.use_ns("nuclear_pope").use_db("stock_day_k").await?;
+
+        for x in stock_vec {
+            let _record: Option<Record> = sdb.create("stock").content(x).await?;
+        }
+        println!("Done file data record, timer: [{:?}]", exe_time.elapsed());
+        cmd.cmd_offline();
         Ok(())
+    }
+    #[derive(Debug, Serialize, Deserialize, Clone)]
+    struct Record {
+        id: RecordId,
     }
 }
