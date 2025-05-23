@@ -13,7 +13,8 @@ mod project {
         command.display_child_and_command();
         tokio::time::sleep(std::time::Duration::from_millis(1000)).await;
 
-        test_content(db_port).await?;
+        let _sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", db_port)).await?;
+        // test_content(db_port).await?;
 
         command.kill_child();
 
