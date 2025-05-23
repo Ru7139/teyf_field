@@ -37,7 +37,7 @@ impl SdbController {
             .arg(&self.user)
             .arg("--pass")
             .arg(&self.pass)
-            .arg(&format!("fild://{}", &self.database_folder))
+            .arg(&format!("file://{}", &self.database_folder))
             .stdout(std::process::Stdio::piped())
             .stderr(std::process::Stdio::piped());
 
