@@ -178,6 +178,7 @@ pub mod project {
         // tokio::time::sleep(std::time::Duration::from_millis(50)).await;
 
         let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+
         sdb.signin(surrealdb::opt::auth::Root {
             username: "ruut_stock",
             password: "ruut_stock",
@@ -185,10 +186,46 @@ pub mod project {
         .await?;
         sdb.use_ns("nuclear_pope").use_db("stock_day_k").await?;
 
-        for x in stock_vec {
-            let _record: Option<Record> = sdb.create("stock").content(x).await?;
-        }
-        println!("Done file data record, timer: [{:?}]", exe_time.elapsed());
+        // for x in stock_vec {
+        //     let _record: Option<Record> = sdb.create("stock").content(x).await?;
+        // }
+        //
+
+        // let futures: Vec<_> = stock_vec
+        //     .into_iter()
+        //     .map(|x| {
+        //         let sdb = sdb.clone();
+        //         async move {
+        //             let _record: Option<Record> = sdb.create("stock").content(x).await.unwrap();
+        //         }
+        //     })
+        //     .collect();
+
+        // // 并行执行并收集结果
+        // let results: Vec<Result<Option<Record>, Box<dyn std::error::Error>>> =
+        //     futures::future::join_all(futures).await;
+
+        // // 检查是否有任何插入失败
+        // for result in results {
+        //     result?;
+        // }
+
+        use futures::stream::{self, StreamExt};
+        stream::iter(stock_vec)
+            .map(|x| {
+                let sdb = sdb.clone();
+                async move { sdb.create("20240102").content(x).await }
+            })
+            .buffer_unordered(10000) // 最大并发数设为10
+            .collect::<Vec<Result<Option<Record>, surrealdb::Error>>>()
+            .await
+            .into_iter()
+            .collect::<Result<Vec<_>, _>>()?;
+
+        println!(
+            "Done file data recording, timer: [{:?}]",
+            exe_time.elapsed()
+        );
         cmd.cmd_offline();
         Ok(())
     }

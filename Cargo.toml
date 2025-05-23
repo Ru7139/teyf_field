@@ -12,6 +12,7 @@ serde-xml-rs = "*"
 chrono = "*"
 
 tokio = { version = "*", features = ["full"] }
+futures = "*"
 
 walkdir = "*"
 rayon = "*"

@@ -6885,6 +6885,7 @@ dependencies = [
  "chrono",
  "dioxus",
  "docx-rs",
+ "futures",
  "futures-util",
  "plotters",
  "quick-xml 0.37.5",
