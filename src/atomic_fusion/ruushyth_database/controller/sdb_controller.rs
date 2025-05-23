@@ -53,7 +53,7 @@ impl SdbController {
             }
         }
     }
-    pub fn childa_shutdown(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn cmd_shutdown(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         if let Some(mut child) = self.childa.take() {
             child.kill()?;
         }
