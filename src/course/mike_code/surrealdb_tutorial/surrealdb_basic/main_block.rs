@@ -21,6 +21,7 @@ mod project {
         Ok(())
     }
 
+    #[allow(unused)]
     async fn test_content(sdb_port: u16) -> Result<(), Box<dyn std::error::Error>> {
         let sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", sdb_port)).await?;
 
