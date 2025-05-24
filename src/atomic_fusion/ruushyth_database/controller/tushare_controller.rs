@@ -29,17 +29,32 @@ pub async fn download_tushare_data_by_day(
     download_folder_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
+    let timer = std::time::Instant::now();
+    let vec_len = year_days_vec.len();
+
+    // 日志打印的闭包
+    let console_log_print = |total: usize, now_id: usize| {
+        if now_id == 0 || now_id % 25 == 24 || now_id == total - 1 {
+            println!(
+                "{:6.2}% ---> [{:w$}] in [{}] ---> count: [{:w$}] ---> time: {:?}",
+                ((now_id + 1) as f64 / total as f64) * 100f64,
+                now_id + 1,
+                total,
+                now_id,
+                timer.elapsed(),
+                w = total.to_string().len(),
+            )
+        }
+    };
 
     for (ctr, ymd) in year_days_vec.into_iter().enumerate() {
         let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
-        let year = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
-        let week_day_num = (year + year / 4 - year / 100
-            + year / 400
-            + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize]
-            + dt.2)
-            % 7;
+        let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
+        let ya = y + y / 4 - y / 100 + y / 400;
+        let week_day_num = (ya + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize] + dt.2) % 7;
 
         if week_day_num == 6 || week_day_num == 0 {
+            console_log_print(vec_len, ctr);
             continue;
         }
 
@@ -59,12 +74,12 @@ pub async fn download_tushare_data_by_day(
             false => return Err(format!("status code: {}", response.status()).into()),
             true => {
                 let file_path = format!("{}/rsps_{}_[{}]", download_folder_path, ymd, week_day_num);
-
                 let mut file = std::fs::File::create(file_path).expect("Unable to create file");
                 file.write_all(response.text().await?.as_bytes())
                     .expect("Unable to write");
             }
         }
+        console_log_print(vec_len, ctr);
     }
 
     Ok(())

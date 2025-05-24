@@ -33,10 +33,9 @@ const NORMAL_FIELDS: &str =
 
 #[tokio::test]
 async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error>> {
-    let days_vec = super::controller::tushare_controller::get_year_days_vec(2024)?;
     let download_folder = "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024";
     super::controller::tushare_controller::download_tushare_data_by_day(
-        days_vec,
+        super::controller::tushare_controller::get_year_days_vec(2024)?,
         TUSHARE_URL,
         DAILY_API,
         TOKEN_RU,
