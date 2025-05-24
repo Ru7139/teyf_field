@@ -2,8 +2,8 @@
 src/course/mike_code/surrealdb_tutorial/surrealdb_basic/ruut_basic_db
 src/atomic_fusion/ruushyth_database/workshop/stock_fusion_db/stock_database_trunk
 
-src/atomic_fusion/ruushyth_database/workshop/raw_stock_file
-src/nuclear_field/stock_daily_boom/download_file
+#src/atomic_fusion/ruushyth_database/workshop/raw_stock_file
+#src/nuclear_field/stock_daily_boom/download_file
 
 .DS_Store
 **/.DS_Store

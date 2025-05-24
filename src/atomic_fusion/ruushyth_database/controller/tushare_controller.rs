@@ -31,9 +31,10 @@ pub async fn download_tushare_data_by_day(
     let client = reqwest::Client::new();
     let timer = std::time::Instant::now();
     let vec_len = year_days_vec.len();
+    let mut counter = 0u32;
 
     // 日志打印的闭包
-    let console_log_print = |total: usize, now_id: usize| {
+    let console_log_print = |total: usize, now_id: usize, counter: u32| {
         if now_id == 0 {
             println!("Now beginning to fetch!");
         }
@@ -43,7 +44,7 @@ pub async fn download_tushare_data_by_day(
                 ((now_id + 1) as f64 / total as f64) * 100f64,
                 now_id + 1,
                 total,
-                now_id,
+                counter,
                 timer.elapsed(),
                 w = total.to_string().len(),
             )
@@ -57,7 +58,7 @@ pub async fn download_tushare_data_by_day(
         let week_day_num = (ya + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize] + dt.2) % 7;
 
         if week_day_num == 6 || week_day_num == 0 {
-            console_log_print(vec_len, ctr);
+            console_log_print(vec_len, ctr, counter);
             continue;
         }
 
@@ -82,7 +83,8 @@ pub async fn download_tushare_data_by_day(
                     .expect("Unable to write");
             }
         }
-        console_log_print(vec_len, ctr);
+        counter += 1;
+        console_log_print(vec_len, ctr, counter);
     }
 
     Ok(())
