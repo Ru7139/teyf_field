@@ -10,6 +10,9 @@ pub mod project {
     use surrealdb::RecordId;
     use surrealdb::engine::remote::ws::Ws;
 
+    #[cfg(test)]
+    #[tokio::test]
+    #[ignore]
     pub async fn main_fetch_data() -> Result<(), Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
         let tushare_url = "http://api.tushare.pro";
@@ -47,7 +50,7 @@ pub mod project {
             let params = one_day_params_json(&datec);
             // src/nucler_field/stock_daily_boom/download_file
             let path = format!(
-                "src/nucler_field/stock_daily_boom/download_file/response_{}_Week[{}]",
+                "src/nuclear_field/stock_daily_boom/download_file/response_{}_Week[{}]",
                 &datec, day_in_week
             );
 
