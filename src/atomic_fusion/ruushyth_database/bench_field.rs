@@ -32,6 +32,7 @@ const NORMAL_FIELDS: &str =
     "ts_code, trade_date ,open, high, low, ,close, change, pct_chg, vol, amount";
 
 #[tokio::test]
+#[ignore]
 async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error>> {
     let download_folder = "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024";
     super::controller::tushare_controller::download_tushare_data_by_day(
