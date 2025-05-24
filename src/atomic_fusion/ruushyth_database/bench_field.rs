@@ -32,16 +32,17 @@ const NORMAL_FIELDS: &str =
     "ts_code, trade_date ,open, high, low, ,close, change, pct_chg, vol, amount";
 
 #[tokio::test]
-// #[ignore]
-async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error>> {
-    let download_folder = "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2023";
+#[ignore]
+async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let download_folder = "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2021";
     super::controller::tushare_controller::download_tushare_data_by_day(
-        super::controller::tushare_controller::get_year_days_vec(2023)?,
+        super::controller::tushare_controller::get_year_days_vec(2021).unwrap(),
         TUSHARE_URL,
         DAILY_API,
         TOKEN_RU,
         NORMAL_FIELDS,
         download_folder,
+        14, // 根据对方服务器可接受的最大压力调整 14 = 3s
     )
     .await?;
     Ok(())
