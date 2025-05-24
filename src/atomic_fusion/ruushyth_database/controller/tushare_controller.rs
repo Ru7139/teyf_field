@@ -34,6 +34,9 @@ pub async fn download_tushare_data_by_day(
 
     // 日志打印的闭包
     let console_log_print = |total: usize, now_id: usize| {
+        if now_id == 0 {
+            println!("Now beginning to fetch!");
+        }
         if now_id == 0 || now_id % 25 == 24 || now_id == total - 1 {
             println!(
                 "{:6.2}% ---> [{:w$}] in [{}] ---> count: [{:w$}] ---> time: {:?}",
