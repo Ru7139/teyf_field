@@ -1,1 +1,1 @@
-{"request_id":"8ecc8c5b-e434-4247-abe6-dbcab59cda93","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","change","pct_chg","vol","amount"],"items":[],"has_more":false,"count":-1},"msg":""}
+{"request_id":"d341568d-8abe-427d-93c0-2868d7badcc1","code":0,"data":{"fields":["ts_code","trade_date","open","high","low","close","change","pct_chg","vol","amount"],"items":[],"has_more":false,"count":-1},"msg":""}
