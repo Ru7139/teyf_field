@@ -41,8 +41,8 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
         DAILY_API,
         TOKEN_RU,
         NORMAL_FIELDS,
-        download_folder,
-        14, // 根据对方服务器可接受的最大压力调整 14 = 3s
+        download_folder, // 若全覆盖 14 = 3.35s
+        14,              // 根据对方服务器可接受的最大压力调整 14 = 3s
     )
     .await?;
     Ok(())

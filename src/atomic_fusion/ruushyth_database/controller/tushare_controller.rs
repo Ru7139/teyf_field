@@ -54,15 +54,15 @@ pub async fn download_tushare_data_by_day(
     let client = reqwest::Client::new();
 
     let vec_len = year_days_vec.len();
-    let mut counter = 0u32;
+    let mut file_counter = 0u32;
 
     let semaphore = Arc::new(Semaphore::new(concurrency_limit));
     let mut tasks = Vec::new();
 
     for (ctr, ymd) in year_days_vec.into_iter().enumerate() {
-        let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
-        let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
-        let ya = y + y / 4 - y / 100 + y / 400;
+        let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100); // date
+        let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 }; // year adjust
+        let ya = y + y / 4 - y / 100 + y / 400; // part formula
         let week_day_num = (ya + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize] + dt.2) % 7;
 
         if week_day_num == 6 || week_day_num == 0 {
@@ -122,6 +122,6 @@ pub async fn download_tushare_data_by_day(
         task.await??;
     }
 
-    println!("Done tasks with {:?}", timer.elapsed());
+    println!("Done all tasks with {:?}", timer.elapsed());
     Ok(())
 }
