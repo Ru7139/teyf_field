@@ -18,9 +18,15 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
 
     let _sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
 
-    std::thread::sleep(std::time::Duration::from_millis(500));
+    // std::thread::sleep(std::time::Duration::from_millis(500));
 
     test_db_ctrl.cmd_shutdown()?;
 
+    Ok(())
+}
+
+#[tokio::test]
+async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error>> {
+    super::controller::tushare_controller::get_year_data(2024, "year_folder_path").await?;
     Ok(())
 }
