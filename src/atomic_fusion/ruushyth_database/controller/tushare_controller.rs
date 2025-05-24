@@ -1,28 +1,71 @@
-const TUSHARE_URL: &str = "http://api.tushare.pro";
-const DAILY_API: &str = "daily";
-const TOKEN_RU: &str = "e1c23bbb77f2cc2ae0169d5f6da2b5b0df3b685763dad71085559c5a";
-const NORMAL_FIELDS: &str =
-    "ts_code, trade_date ,open, high, low, ,close, change, pct_chg, vol, amount";
-const NORMAL_YEAR_DAYS: [u32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const LEAP_YEAR_DAYS: [u32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-const YEAR_DAYS: [[u32; 12]; 2] = [NORMAL_YEAR_DAYS, LEAP_YEAR_DAYS]; // false, ture
+use serde_json::json;
+use std::io::Write;
 
-pub async fn get_year_data(
-    year: u32,
-    year_folder_path: &str,
+const NORMAL_YEAR_DAYS: [i32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const LEAP_YEAR_DAYS: [i32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const YEAR_DAYS: [[i32; 12]; 2] = [NORMAL_YEAR_DAYS, LEAP_YEAR_DAYS]; // false, ture
+const WEEK_DAY_SAKAMOTO_ARRAY: [i32; 12] = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+
+pub fn get_year_days_vec(year: i32) -> Result<Vec<i32>, Box<dyn std::error::Error>> {
+    let days_array = YEAR_DAYS[(year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) as usize];
+
+    let mut date_vec: Vec<i32> = Vec::with_capacity(366);
+    date_vec.extend(
+        days_array
+            .into_iter()
+            .enumerate()
+            .flat_map(|(m, d)| (1..=d).map(move |day| year * 10000 + (m as i32 + 1) * 100 + day)),
+    ); // dbg!(date_vec.capacity(), date_vec.len()); // 366, 366
+
+    Ok(date_vec)
+}
+
+pub async fn download_tushare_data_by_day(
+    year_days_vec: Vec<i32>,
+    url: &str,
+    api: &str,
+    token: &str,
+    fields: &str,
+    download_folder_path: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let func_exec_timer = std::time::Instant::now();
-    let mut date_vec: Vec<u32> = Vec::with_capacity(366);
+    let client = reqwest::Client::new();
 
-    let months_days = YEAR_DAYS[(year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) as usize];
+    for (ctr, ymd) in year_days_vec.into_iter().enumerate() {
+        let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
+        let year = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
+        let week_day_num = (year + year / 4 - year / 100
+            + year / 400
+            + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize]
+            + dt.2)
+            % 7;
 
-    for (month_id, days) in months_days.into_iter().enumerate() {
-        for the_day in 1..=days {
-            date_vec.push(year * 10000 + (month_id as u32 + 1) * 100 + the_day);
+        if week_day_num == 6 || week_day_num == 0 {
+            continue;
+        }
+
+        let response = client
+            .post(url)
+            .json(&json!({
+                "api_name": api,
+                "token": token,
+                "params": json!({ "start_date": ymd, "end_date": ymd }),
+                "fields": fields
+            }))
+            .send()
+            .await
+            .expect("Failed to send request");
+
+        match response.status().is_success() {
+            false => return Err(format!("status code: {}", response.status()).into()),
+            true => {
+                let file_path = format!("{}/rsps_{}_[{}]", download_folder_path, ymd, week_day_num);
+
+                let mut file = std::fs::File::create(file_path).expect("Unable to create file");
+                file.write_all(response.text().await?.as_bytes())
+                    .expect("Unable to write");
+            }
         }
     }
-
-    dbg!(date_vec);
 
     Ok(())
 }

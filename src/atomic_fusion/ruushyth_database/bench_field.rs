@@ -25,8 +25,24 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+const TUSHARE_URL: &str = "http://api.tushare.pro";
+const DAILY_API: &str = "daily";
+const TOKEN_RU: &str = "e1c23bbb77f2cc2ae0169d5f6da2b5b0df3b685763dad71085559c5a";
+const NORMAL_FIELDS: &str =
+    "ts_code, trade_date ,open, high, low, ,close, change, pct_chg, vol, amount";
+
 #[tokio::test]
 async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error>> {
-    super::controller::tushare_controller::get_year_data(2024, "year_folder_path").await?;
+    let days_vec = super::controller::tushare_controller::get_year_days_vec(2024)?;
+    let download_folder = "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024";
+    super::controller::tushare_controller::download_tushare_data_by_day(
+        days_vec,
+        TUSHARE_URL,
+        DAILY_API,
+        TOKEN_RU,
+        NORMAL_FIELDS,
+        download_folder,
+    )
+    .await?;
     Ok(())
 }
