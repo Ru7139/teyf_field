@@ -38,33 +38,17 @@ pub async fn download_every_stock_year_dayk_data(
         }
     }
 
-
     let y = year as i32;
     let mut date_vec: Vec<i32> = Vec::with_capacity(366);
 
     date_vec.extend(
         YEAR_DAYS[(y % 4 == 0 && (y % 100 != 0 || y % 400 == 0)) as usize]
-            .into_iter()
-            .enumerate()
-            .flat_map(|(m, d)| (1..=d).map(move |day| y * 10000 + (m as i32 + 1) * 100 + day)),
+            .into_iter().enumerate()
+            .flat_map(|(m, d)| (1..=d)
+                .map(move |day| y * 10000 + (m as i32 + 1) * 100 + day)),
     );
 
     let counter = Arc::new(AtomicUsize::new(0));
-
-    // let mut weekdays_count = 0;
-
-    //    // 计算这一年的第一天和最后一天
-    //    let start_date = NaiveDate::from_ymd(year, 1, 1);
-    //    let end_date = NaiveDate::from_ymd(year, 12, 31);
-
-    //    // 遍历这一年中的每一天
-    //    for day in start_date.iter_days().take_while(|&d| d <= end_date) {
-    //        // 判断是否是工作日（周一到周五）
-    //        if let Weekday::Mon | Weekday::Tue | Weekday::Wed | Weekday::Thu | Weekday::Fri = day.weekday() {
-    //            weekdays_count += 1;
-    //        }
-    //    }
-
 
     let mut tasks: Vec<tokio::task::JoinHandle<Result<(), Box<dyn std::error::Error + Send + Sync>>>> = Vec::new();
     let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(concurrency_limit));

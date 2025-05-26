@@ -61,3 +61,9 @@ impl SdbController {
         Ok(())
     }
 }
+
+// struct
+
+async fn convert_json_to_schema_vec(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
+    Ok(())
+}
