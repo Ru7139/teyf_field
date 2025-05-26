@@ -34,27 +34,27 @@ pub async fn download_tushare_data_by_day(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let timer = std::time::Instant::now();
     // 日志打印的闭包
-    let console_log_print = |total: usize, now_id: usize, counter: u32| {
-        if now_id == 0 {
-            println!("Now beginning to fetch!");
-        }
-        if now_id == 0 || now_id % 25 == 24 || now_id == total - 1 {
-            println!(
-                "{:6.2}% ---> [{:w$}] in [{}] ---> count: [{:w$}] ---> time: {:?}",
-                ((now_id + 1) as f64 / total as f64) * 100f64,
-                now_id + 1,
-                total,
-                counter,
-                timer.elapsed(),
-                w = total.to_string().len(),
-            )
-        }
-    };
+    // let console_log_print = |total: usize, now_id: usize, counter: u32| {
+    //     if now_id == 0 {
+    //         println!("Now beginning to fetch!");
+    //     }
+    //     if now_id == 0 || now_id % 25 == 24 || now_id == total - 1 {
+    //         println!(
+    //             "{:6.2}% ---> [{:w$}] in [{}] ---> count: [{:w$}] ---> time: {:?}",
+    //             ((now_id + 1) as f64 / total as f64) * 100f64,
+    //             now_id + 1,
+    //             total,
+    //             counter,
+    //             timer.elapsed(),
+    //             w = total.to_string().len(),
+    //         )
+    //     }
+    // };
 
     let client = reqwest::Client::new();
 
-    let vec_len = year_days_vec.len();
-    let mut file_counter = 0u32;
+    // let mut file_counter = 0u32;
+    // let vec_len = year_days_vec.len();
 
     let semaphore = Arc::new(Semaphore::new(concurrency_limit));
     let mut tasks = Vec::new();
@@ -113,7 +113,7 @@ pub async fn download_tushare_data_by_day(
 
         tasks.push(task);
 
-        // 控制任务并发数量
+        // 打印进度，若要打印更改一下counter为Arc<u32>
         // console_log_print(vec_len, ctr, counter);
     }
 
