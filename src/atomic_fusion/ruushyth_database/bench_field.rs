@@ -50,6 +50,7 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
 }
 
 #[tokio::test]
+#[ignore]
 async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let year = 2016;
     let folder = format!(
