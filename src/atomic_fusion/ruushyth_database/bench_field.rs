@@ -52,11 +52,11 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
 #[tokio::test]
 #[ignore]
 async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let year = 2016;
+    let year = 2019;
     let folder = format!(
         "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/{}",
         year
     );
-    super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 14).await?;
+    super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 4).await?;
     Ok(())
 }
