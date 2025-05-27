@@ -1,7 +1,5 @@
-use std::process::{Child, Command};
-
-use dioxus::html::u::data;
 use serde::{Deserialize, Serialize};
+use std::process::{Child, Command};
 use surrealdb::{Surreal, engine::remote::ws::Client};
 
 pub struct SdbController {
@@ -81,8 +79,16 @@ struct TushareCruxData {
 
 pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
     let file_data = std::fs::read_to_string(file_path).expect("Unable to open the file");
-    let file_data_deseril: TushareMarketOneDayJson =
-        serde_json::from_str(&file_data).expect("Unable to deserilize");
+    // let file_data_deseril: TushareMarketOneDayJson =
+    //     serde_json::from_str(&file_data).expect("Unable to deserilize");
+
+    let file_data_deseril: TushareMarketOneDayJson = match serde_json::from_str(&file_data) {
+        Ok(data) => data,
+        Err(err) => {
+            eprintln!("❌ Failed to deserialize JSON in {}: {}", file_path, err);
+            return Vec::new();
+        }
+    };
     let vec_len = file_data_deseril.data.items.len();
     if vec_len == 0 {
         return Vec::new();

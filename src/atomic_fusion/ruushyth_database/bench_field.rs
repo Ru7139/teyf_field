@@ -1,5 +1,5 @@
 #[tokio::test]
-#[ignore]
+// #[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     // use super::controller::sdb_controller::SdbController;
     use surrealdb::engine::remote::ws::Ws;
@@ -91,12 +91,12 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
 #[tokio::test]
 #[ignore]
 async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let year = 2019;
+    let year = 2022;
     let folder = format!(
         "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/{}",
         year
     );
-    super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 4).await?;
+    super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 12).await?;
     Ok(())
 }
 
@@ -109,6 +109,7 @@ fn convert_chinadayk_test() {
 }
 
 #[test]
+#[ignore]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
     let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2022/";
 
@@ -125,7 +126,7 @@ fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>>
         // println!("{:?}", p);
         let vec =
             super::controller::sdb_controller::convert_json_to_schema_vec(p.to_str().unwrap());
-        dbg!(vec.len());
+        // dbg!(vec.len());
     }
 
     Ok(())
