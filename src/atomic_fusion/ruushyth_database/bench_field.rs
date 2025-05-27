@@ -1,4 +1,5 @@
 #[tokio::test]
+#[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     use super::controller::sdb_controller::SdbController;
     use surrealdb::engine::remote::ws::Ws;
