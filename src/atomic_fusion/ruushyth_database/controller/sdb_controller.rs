@@ -74,12 +74,10 @@ struct TushareMarketOneDayJson {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct TushareCruxData {
     fields: Vec<String>,
-    items: Vec<(String, u16, f64, f64, f64, f64, f64, f64, f64, f64)>,
+    items: Vec<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)>,
 }
 
-async fn convert_json_to_schema_vec<'a>(
-    file_path: &str,
-) -> Result<Vec<ChinaStockDayK>, Box<dyn std::error::Error>> {
+pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
     let file_data = std::fs::read_to_string(file_path).expect("Unable to open the file");
     let file_data_deseril: TushareMarketOneDayJson =
         serde_json::from_str(&file_data).expect("Unable to deserilize");
@@ -88,15 +86,15 @@ async fn convert_json_to_schema_vec<'a>(
         .data
         .items
         .into_iter()
-        .map(Into::into)
+        .map(Into::into) // ChatGPT: 非常轻量（O(1) 内存移动/复制）
         .collect();
-    Ok(result)
+    result
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-struct ChinaStockDayK {
+pub struct ChinaStockDayK {
     code: String,
-    date: u16,
+    date: String,
     open: f64,
     high: f64,
     low: f64,
@@ -106,8 +104,8 @@ struct ChinaStockDayK {
     vol: f64,
     amount: f64,
 }
-impl From<(String, u16, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
-    fn from(i: (String, u16, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
+impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
+    fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
         ChinaStockDayK::new_with_params(i.0, i.1, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
     }
 }
@@ -115,7 +113,7 @@ impl From<(String, u16, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockD
 impl ChinaStockDayK {
     fn new_with_params(
         code: String,
-        date: u16,
+        date: String,
         open: f64,
         high: f64,
         low: f64,

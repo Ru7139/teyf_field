@@ -60,3 +60,10 @@ async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send
     super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 4).await?;
     Ok(())
 }
+
+#[test]
+fn convert_chinadayk_test() {
+    let c_file_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/rsps_20240103_[3]";
+    let vec = super::controller::sdb_controller::convert_json_to_schema_vec(c_file_path);
+    println!("{}", vec.len())
+}
