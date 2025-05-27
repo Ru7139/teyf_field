@@ -82,7 +82,11 @@ pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
     let file_data = std::fs::read_to_string(file_path).expect("Unable to open the file");
     let file_data_deseril: TushareMarketOneDayJson =
         serde_json::from_str(&file_data).expect("Unable to deserilize");
-    let mut result: Vec<ChinaStockDayK> = Vec::with_capacity(file_data_deseril.data.items.len());
+    let vec_len = file_data_deseril.data.items.len();
+    if vec_len == 0 {
+        return Vec::new();
+    }
+    let mut result: Vec<ChinaStockDayK> = Vec::with_capacity(vec_len);
     let result: Vec<ChinaStockDayK> = file_data_deseril
         .data
         .items
