@@ -2,6 +2,7 @@ use std::process::{Child, Command};
 
 use dioxus::html::u::data;
 use serde::{Deserialize, Serialize};
+use surrealdb::{Surreal, engine::remote::ws::Client};
 
 pub struct SdbController {
     sdb_port: u16,
@@ -142,4 +143,36 @@ impl ChinaStockDayK {
             amount,
         }
     }
+}
+
+use futures::stream::{self, StreamExt};
+pub async fn save_dayk_to_sdb(
+    sdb: &Surreal<Client>,
+    namespace: &str,
+    database: &str,
+    data_vec: Vec<ChinaStockDayK>,
+    concurrent_num: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
+    sdb.use_ns(namespace).use_db(database).await?;
+
+    stream::iter(data_vec)
+        .map(|x| {
+            let sdb = sdb.clone();
+            async move {
+                sdb.create((x.date.to_string().as_str(), &x.code)) // table name & WHAT!
+                    .content(x)
+                    .await
+            }
+        })
+        .buffer_unordered(concurrent_num) // 最大并发数
+        .collect::<Vec<Result<Option<Record>, surrealdb::Error>>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(())
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct Record {
+    id: surrealdb::RecordId,
 }

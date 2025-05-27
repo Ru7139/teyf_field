@@ -1,8 +1,9 @@
 #[tokio::test]
-#[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     use super::controller::sdb_controller::SdbController;
     use surrealdb::engine::remote::ws::Ws;
+
+    let timer = std::time::Instant::now();
 
     let port: u16 = 60001;
     let mut test_db_ctrl = SdbController::new_with_params(
@@ -17,12 +18,49 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
 
     std::thread::sleep(std::time::Duration::from_millis(1000));
 
-    let _sdb = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+    let sdba = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+
+    sdba.signin(surrealdb::opt::auth::Root {
+        username: "nuut_stock",
+        password: "nuut_stock",
+    })
+    .await?;
+
+    let namespace = "ruushyth";
+    let database = "Y2025M5D27";
+    let concurrent_num = 10000;
+
+    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
+    let ignored = [".DS_Store", "Thumbs.db"];
+    let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| {
+            e.file_type().is_file() && !ignored.contains(&e.file_name().to_string_lossy().as_ref())
+        })
+        .map(|e| e.path().to_path_buf())
+        .collect();
+
+    use super::controller::sdb_controller::convert_json_to_schema_vec;
+
+    for x in file_paths {
+        let data_vec = convert_json_to_schema_vec(x.to_str().unwrap());
+
+        super::controller::sdb_controller::save_dayk_to_sdb(
+            &sdba,
+            namespace,
+            database,
+            data_vec,
+            concurrent_num,
+        )
+        .await?;
+    }
 
     // std::thread::sleep(std::time::Duration::from_millis(500));
 
     test_db_ctrl.cmd_shutdown()?;
 
+    dbg!(timer.elapsed());
     Ok(())
 }
 
@@ -70,7 +108,6 @@ fn convert_chinadayk_test() {
 }
 
 #[test]
-#[ignore]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
     let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
 
