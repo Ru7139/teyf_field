@@ -119,18 +119,9 @@ pub struct ChinaStockDayK {
 impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
     fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
         let date: u32 = i.1.parse().unwrap();
-        ChinaStockDayK::new_with_params(
-            i.0,
-            date,
-            i.2,
-            i.3,
-            i.4,
-            i.5,
-            i.5 - i.2,
-            (i.5 - i.2) / 1.2,
-            i.8,
-            i.9,
-        )
+        let change = i.5 - i.2;
+        let change_percent = (i.5 - i.2) / 1.2;
+        ChinaStockDayK::new_with_params(i.0, date, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
     }
 }
 
