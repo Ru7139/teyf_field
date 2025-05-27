@@ -28,10 +28,10 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let namespace = "ruushath";
-    let database = "Tey2022";
+    let database = "Tey2021";
     let concurrent_num = 5000;
 
-    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2022/";
+    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2021/";
     let ignored = [".DS_Store", "Thumbs.db"];
     let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
         .into_iter()
@@ -109,7 +109,7 @@ fn convert_chinadayk_test() {
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
     let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2021/";
 
@@ -124,9 +124,9 @@ fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>>
         .collect();
     for p in file_paths {
         // println!("{:?}", p);
-        let vec =
+        let _vec =
             super::controller::sdb_controller::convert_json_to_schema_vec(p.to_str().unwrap());
-        dbg!(vec.len());
+        // dbg!(vec.len());
     }
 
     Ok(())
