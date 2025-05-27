@@ -219,7 +219,7 @@ pub mod project {
                 let sdb = sdb.clone();
                 async move { sdb.create("20240102").content(x).await }
             })
-            .buffer_unordered(10000) // 最大并发数设为10
+            .buffer_unordered(10000) // 最大并发数
             .collect::<Vec<Result<Option<Record>, surrealdb::Error>>>()
             .await
             .into_iter()

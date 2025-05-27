@@ -1,5 +1,7 @@
 use std::process::{Child, Command};
 
+use serde::{Deserialize, Serialize};
+
 pub struct SdbController {
     sdb_port: u16,
     user: String,
@@ -62,8 +64,78 @@ impl SdbController {
     }
 }
 
-// struct
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct TushareMarketOneDayJson {
+    request_id: String,
+    code: i32,
+    data: TushareCruxData,
+}
 
-async fn convert_json_to_schema_vec(file_path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    Ok(())
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct TushareCruxData {
+    fields: Vec<String>,
+    items: Vec<(String, u16, f64, f64, f64, f64, f64, f64, f64, f64)>,
+}
+
+async fn convert_json_to_schema_vec<'a>(
+    file_path: &str,
+) -> Result<Vec<ChinaStockDayK>, Box<dyn std::error::Error>> {
+    let file_data = std::fs::read_to_string(file_path).expect("Unable to open the file");
+    let file_data_deseril: TushareMarketOneDayJson =
+        serde_json::from_str(&file_data).expect("Unable to deserilize");
+    let mut result: Vec<ChinaStockDayK> = Vec::with_capacity(file_data_deseril.data.items.len());
+    let result: Vec<ChinaStockDayK> = file_data_deseril
+        .data
+        .items
+        .into_iter()
+        .map(Into::into)
+        .collect();
+    Ok(result)
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+struct ChinaStockDayK {
+    code: String,
+    date: u16,
+    open: f64,
+    high: f64,
+    low: f64,
+    close: f64,
+    change: f64,
+    chg_percent: f64,
+    vol: f64,
+    amount: f64,
+}
+impl From<(String, u16, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
+    fn from(i: (String, u16, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
+        ChinaStockDayK::new_with_params(i.0, i.1, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
+    }
+}
+
+impl ChinaStockDayK {
+    fn new_with_params(
+        code: String,
+        date: u16,
+        open: f64,
+        high: f64,
+        low: f64,
+        close: f64,
+        change: f64,
+        chg_percent: f64,
+        vol: f64,
+        amount: f64,
+    ) -> ChinaStockDayK {
+        ChinaStockDayK {
+            code,
+            date,
+            open,
+            high,
+            low,
+            close,
+            change,
+            chg_percent,
+            vol,
+            amount,
+        }
+    }
 }
