@@ -160,6 +160,7 @@ pub async fn save_dayk_to_sdb(
             let sdb = sdb.clone();
             async move {
                 sdb.create((x.date.to_string().as_str(), &x.code)) // table name & id(main key)
+                    // sdb.create(x.date.to_string().as_str())
                     .content(x)
                     .await
             }

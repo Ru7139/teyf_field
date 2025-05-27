@@ -1,23 +1,23 @@
 #[tokio::test]
-// #[ignore]
+#[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
-    use super::controller::sdb_controller::SdbController;
+    // use super::controller::sdb_controller::SdbController;
     use surrealdb::engine::remote::ws::Ws;
 
     let timer = std::time::Instant::now();
 
-    let port: u16 = 60001;
-    let mut test_db_ctrl = SdbController::new_with_params(
-        port,
-        "nuut_stock",
-        "nuut_stock",
-        "src/atomic_fusion/ruushyth_database/workshop/stock_fusion_db/stock_database_trunk",
-    );
+    let port: u16 = 65534;
+    // let mut test_db_ctrl = SdbController::new_with_params(
+    //     port,
+    //     "nuut_stock",
+    //     "nuut_stock",
+    //     "src/atomic_fusion/ruushyth_database/workshop/stock_fusion_db/stock_database_trunk",
+    // );
 
-    test_db_ctrl.start_sdb()?;
-    test_db_ctrl.display_pid();
+    // test_db_ctrl.start_sdb()?;
+    // test_db_ctrl.display_pid();
 
-    std::thread::sleep(std::time::Duration::from_millis(1000));
+    // std::thread::sleep(std::time::Duration::from_millis(1000));
 
     let sdba = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
 
@@ -27,11 +27,11 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     })
     .await?;
 
-    let namespace = "ruushyth";
-    let database = "Y2025MD527";
-    let concurrent_num = 10000;
+    let namespace = "ruushath";
+    let database = "Tey2022";
+    let concurrent_num = 5000;
 
-    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
+    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2022/";
     let ignored = [".DS_Store", "Thumbs.db"];
     let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
         .into_iter()
@@ -59,7 +59,7 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
 
     // std::thread::sleep(std::time::Duration::from_millis(500));
 
-    test_db_ctrl.cmd_shutdown()?;
+    // test_db_ctrl.cmd_shutdown()?;
 
     dbg!(timer.elapsed());
     Ok(())
@@ -110,7 +110,7 @@ fn convert_chinadayk_test() {
 
 #[test]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
-    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
+    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2022/";
 
     let ignored = [".DS_Store", "Thumbs.db"];
     let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
