@@ -1,5 +1,5 @@
 #[tokio::test]
-#[ignore]
+// #[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     use super::controller::sdb_controller::SdbController;
     use surrealdb::engine::remote::ws::Ws;
@@ -28,7 +28,7 @@ async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     .await?;
 
     let namespace = "ruushyth";
-    let database = "Y2025M5D27";
+    let database = "Y2025MD527";
     let concurrent_num = 10000;
 
     let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
