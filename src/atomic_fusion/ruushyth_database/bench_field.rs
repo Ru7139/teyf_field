@@ -69,9 +69,26 @@ fn convert_chinadayk_test() {
     println!("{}", vec.len());
 }
 
-fn convert_one_folder_chinadayk_test() {
+#[test]
+#[ignore]
+fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
     let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2024/";
-    let c_file_path = "rsps_20240103_[3]";
-    let vec = super::controller::sdb_controller::convert_json_to_schema_vec(c_file_path);
-    println!("{}", vec.len());
+
+    let ignored = [".DS_Store", "Thumbs.db"];
+    let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| {
+            e.file_type().is_file() && !ignored.contains(&e.file_name().to_string_lossy().as_ref())
+        })
+        .map(|e| e.path().to_path_buf())
+        .collect();
+    for p in file_paths {
+        // println!("{:?}", p);
+        let vec =
+            super::controller::sdb_controller::convert_json_to_schema_vec(p.to_str().unwrap());
+        dbg!(vec.len());
+    }
+
+    Ok(())
 }
