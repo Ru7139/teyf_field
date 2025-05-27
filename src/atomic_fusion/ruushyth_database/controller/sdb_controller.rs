@@ -1,5 +1,6 @@
 use std::process::{Child, Command};
 
+use dioxus::html::u::data;
 use serde::{Deserialize, Serialize};
 
 pub struct SdbController {
@@ -94,7 +95,7 @@ pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChinaStockDayK {
     code: String,
-    date: String,
+    date: u32,
     open: f64,
     high: f64,
     low: f64,
@@ -106,14 +107,15 @@ pub struct ChinaStockDayK {
 }
 impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
     fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
-        ChinaStockDayK::new_with_params(i.0, i.1, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
+        let date: u32 = i.1.parse().unwrap();
+        ChinaStockDayK::new_with_params(i.0, date, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
     }
 }
 
 impl ChinaStockDayK {
     fn new_with_params(
         code: String,
-        date: String,
+        date: u32,
         open: f64,
         high: f64,
         low: f64,
