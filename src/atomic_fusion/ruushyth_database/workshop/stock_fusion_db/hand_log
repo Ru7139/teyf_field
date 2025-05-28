@@ -1,1 +1,113 @@
+// 00 fetch
+use serde_json::json;
+use std::io::Write;
 
+const NORMAL_YEAR_DAYS: [i32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const LEAP_YEAR_DAYS: [i32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+const YEAR_DAYS: [[i32; 12]; 2] = [NORMAL_YEAR_DAYS, LEAP_YEAR_DAYS]; // false, ture
+
+const WEEK_DAY_SAKAMOTO_ARRAY: [i32; 12] = [0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4];
+
+const TUSHARE_URL: &str = "http://api.tushare.pro";
+const DAILY_API: &str = "daily";
+// const TOKEN_RU: &str = "e1c23bbb77f2cc2ae0169d5f6da2b5b0df3b685763dad71085559c5a";
+const TOKEN_FE: &str = "7ec7fdbb1c5d4c384becfdc5bcc0df6932503ea1a858dbf02196dabb";
+const NORMAL_FIELDS: &str =
+    "ts_code, trade_date ,open, high, low, ,close, pre_close, change, pct_chg, vol, amount";
+
+#[rustfmt::skip]
+pub async fn download_tushare_data(
+    year: i32,
+    folder_path: &str,
+    concurrency_num: usize,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // ----- ----- ----- ----- ----- set timer ----- ----- ----- ----- -----
+    let timer = std::time::Instant::now();
+
+
+    // ----- ----- ----- ----- ----- check folder path ----- ----- ----- ----- -----
+    let f_path = std::path::Path::new(folder_path);
+
+
+    // ----- ----- ----- ----- ----- if folder not exist ----- ----- ----- ----- -----
+    if !f_path.exists() { std::fs::create_dir_all(f_path).expect("Unalbe to create the folder") }
+
+
+    // ----- ----- ----- ----- ----- create vec ----- ----- ----- ----- -----
+    let mut date_vec: Vec<i32> = Vec::with_capacity(366);
+    date_vec.extend(
+        YEAR_DAYS[(year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize]
+            .into_iter()
+            .enumerate()
+            .flat_map(|(m, d)| (1..=d).map(move |x: i32| year * 10000 + (m as i32 + 1) * 100 + x)),
+    );
+
+
+    // ----- ----- ----- ----- ----- concurrent ----- ----- ----- ----- -----
+    let counter = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+
+    let mut tasks: Vec<tokio::task::
+        JoinHandle<Result<(), Box<dyn std::error::Error + Send + Sync>>>> = Vec::new();
+    let semaphore = std::sync::Arc::new(tokio::sync::Semaphore::new(concurrency_num));
+
+    let client = reqwest::Client::new();
+
+    for ymd in date_vec.into_iter() {
+        let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100); // date
+        let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 }; // year adjust
+        let ya = y + y / 4 - y / 100 + y / 400; // part formula
+        let week_day_num = (ya + WEEK_DAY_SAKAMOTO_ARRAY[(dt.1 - 1) as usize] + dt.2) % 7;
+
+        if week_day_num == 6 || week_day_num == 0 {
+            continue;
+        } // 如果为周六日则跳过
+
+        let semaphore_clone = std::sync::Arc::clone(&semaphore); // 克隆所需的变量
+        let client_clone = client.clone();
+        let folder_path_clone = folder_path.to_string();
+        let counter_clone = std::sync::Arc::clone(&counter);
+
+        let task = tokio::task::spawn(async move {
+            let _permit = semaphore_clone.acquire().await.unwrap(); // 限制并发数量
+
+            let response = client_clone
+                .post(TUSHARE_URL)
+                .json(&json!({
+                    "api_name": DAILY_API,
+                    "token": TOKEN_FE,
+                    "params": json!({ "start_date": ymd, "end_date": ymd }),
+                    "fields": NORMAL_FIELDS
+                }))
+                .send()
+                .await
+                .expect("Failed to send request");
+
+            match response.status().is_success() {
+                false => {
+                    return Err(format!("status code: {}", response.status()).into());
+                }
+                true => {
+                    let file_path =
+                        format!("{}/rsps_{}_[{}]", folder_path_clone, ymd, week_day_num);
+                    let mut file = std::fs::File::create(file_path).expect("Unable to create file");
+                    file.write_all(response.text().await?.as_bytes())
+                        .expect("Unable to write");
+                }
+            }
+
+            let current = counter_clone.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+            println!("{:3} ---> {:?}", current, timer.elapsed());
+
+            Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+        });
+
+        tasks.push(task);
+    }
+
+    for task in tasks {
+        task.await??;
+    } // 等待所有任务完成
+
+    dbg!(timer.elapsed());
+    Ok(())
+}
