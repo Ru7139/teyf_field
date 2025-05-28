@@ -2,7 +2,7 @@
 // #[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     // use super::controller::sdb_controller::SdbController;
-    use surrealdb::engine::any;
+    // use surrealdb::engine::any;
     use surrealdb::engine::remote::ws::Ws;
 
     let timer = std::time::Instant::now();
@@ -118,7 +118,7 @@ fn convert_chinadayk_test() {
 }
 
 #[test]
-// #[ignore]
+#[ignore]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
     for i in 2000..=2024 {
         let parent_folder = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file";
@@ -142,5 +142,70 @@ fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>>
         }
     }
 
+    Ok(())
+}
+
+use surrealdb::engine::remote::ws::Ws;
+
+#[tokio::test]
+#[ignore]
+pub async fn sdb_full_power_with_single_con() -> Result<(), Box<dyn std::error::Error + Send + Sync>>
+{
+    let timer = std::time::Instant::now();
+    let port: u16 = 65534;
+
+    let sdba = surrealdb::Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+    sdba.signin(surrealdb::opt::auth::Root {
+        username: "nuut_stock",
+        password: "nuut_stock",
+    })
+    .await?;
+
+    let namespace = "ruushyth";
+    let concurrent_num = 1;
+    let parent_folder = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file";
+    let ignored = [".DS_Store", "Thumbs.db"];
+
+    let mut tasks = Vec::new();
+
+    for i in 2001..=2024 {
+        let sdba = sdba.clone();
+        let database = format!("Atom{}", i);
+        let dir_path = format!("{}/{}/", parent_folder, i);
+        let ignored = ignored.clone();
+
+        let task = tokio::task::spawn(async move {
+            use super::controller::sdb_controller::{convert_json_to_schema_vec, save_dayk_to_sdb};
+
+            let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(&dir_path)
+                .into_iter()
+                .filter_map(Result::ok)
+                .filter(|e| {
+                    e.file_type().is_file()
+                        && !ignored.contains(&e.file_name().to_string_lossy().as_ref())
+                })
+                .map(|e| e.path().to_path_buf())
+                .collect();
+
+            for x in file_paths {
+                let data_vec = convert_json_to_schema_vec(x.to_str().unwrap());
+                save_dayk_to_sdb(&sdba, namespace, &database, data_vec, concurrent_num)
+                    .await
+                    .unwrap();
+            }
+
+            Ok::<_, Box<dyn std::error::Error + Send + Sync>>(())
+        });
+
+        tasks.push(task);
+    }
+
+    let results = futures::future::join_all(tasks).await;
+
+    for res in results {
+        res??;
+    }
+
+    println!("All data into database with {:?}", timer.elapsed());
     Ok(())
 }
