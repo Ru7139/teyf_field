@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::process::{Child, Command};
+use surrealdb::engine::any::Any;
 use surrealdb::{Surreal, engine::remote::ws::Client};
 
 pub struct SdbController {
@@ -74,7 +75,19 @@ struct TushareMarketOneDayJson {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct TushareCruxData {
     fields: Vec<String>,
-    items: Vec<(String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)>,
+    items: Vec<(
+        String,
+        String,
+        f64,
+        f64,
+        f64,
+        f64,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        f64,
+        f64,
+    )>,
 }
 
 pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
@@ -111,14 +124,42 @@ pub struct ChinaStockDayK {
     high: f64,
     low: f64,
     close: f64,
-    pre_close: f64,
-    change: f64,
-    chg_percent: f64,
+    pre_close: Option<f64>,
+    change: Option<f64>,
+    chg_percent: Option<f64>,
     vol: f64,
     amount: f64,
 }
-impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
-    fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
+impl
+    From<(
+        String,
+        String,
+        f64,
+        f64,
+        f64,
+        f64,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        f64,
+        f64,
+    )> for ChinaStockDayK
+{
+    fn from(
+        i: (
+            String,
+            String,
+            f64,
+            f64,
+            f64,
+            f64,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            f64,
+            f64,
+        ),
+    ) -> Self {
         let date: u32 = i.1.parse().unwrap();
         ChinaStockDayK::new_with_params(i.0, date, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9, i.10)
     }
@@ -132,9 +173,9 @@ impl ChinaStockDayK {
         high: f64,
         low: f64,
         close: f64,
-        pre_close: f64,
-        change: f64,
-        chg_percent: f64,
+        pre_close: Option<f64>,
+        change: Option<f64>,
+        chg_percent: Option<f64>,
         vol: f64,
         amount: f64,
     ) -> ChinaStockDayK {
@@ -168,7 +209,7 @@ pub async fn save_dayk_to_sdb(
         .map(|x| {
             let sdb = sdb.clone();
             async move {
-                sdb.create((x.date.to_string().as_str(), &x.code)) // table name & id(main key)
+                sdb.create((x.date.to_string(), &x.code)) // table name & id(main key)
                     // sdb.create(x.date.to_string().as_str())
                     .content(x)
                     .await
