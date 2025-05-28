@@ -9,7 +9,7 @@ const TUSHARE_URL: &str = "http://api.tushare.pro";
 const DAILY_API: &str = "daily";
 const TOKEN_RU: &str = "e1c23bbb77f2cc2ae0169d5f6da2b5b0df3b685763dad71085559c5a";
 const NORMAL_FIELDS: &str =
-    "ts_code, trade_date ,open, high, low, ,close, change, pct_chg, vol, amount";
+    "ts_code, trade_date ,open, high, low, ,close, pre_close ,change, pct_chg, vol, amount";
 
 const NORMAL_YEAR_DAYS: [i32; 12] = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const LEAP_YEAR_DAYS: [i32; 12] = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -32,10 +32,7 @@ pub async fn download_every_stock_year_dayk_data(
 
     let f_path = std::path::Path::new(folder_path);
     if !f_path.exists() {
-        match std::fs::create_dir_all(f_path) {
-            Ok(_) => println!("未检测到目录，已创建：{}", folder_path),
-            Err(e) => eprintln!("创建目录失败：{}，错误：{}", folder_path, e),
-        }
+        std::fs::create_dir_all(f_path).expect("Unable to create folder or parent folder")
     }
 
     let y = year as i32;

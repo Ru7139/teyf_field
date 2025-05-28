@@ -74,7 +74,7 @@ struct TushareMarketOneDayJson {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct TushareCruxData {
     fields: Vec<String>,
-    items: Vec<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)>,
+    items: Vec<(String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)>,
 }
 
 pub fn convert_json_to_schema_vec(file_path: &str) -> Vec<ChinaStockDayK> {
@@ -111,17 +111,16 @@ pub struct ChinaStockDayK {
     high: f64,
     low: f64,
     close: f64,
+    pre_close: f64,
     change: f64,
     chg_percent: f64,
     vol: f64,
     amount: f64,
 }
-impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
-    fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
+impl From<(String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)> for ChinaStockDayK {
+    fn from(i: (String, String, f64, f64, f64, f64, f64, f64, f64, f64, f64)) -> Self {
         let date: u32 = i.1.parse().unwrap();
-        let change = i.5 - i.2;
-        let change_percent = (i.5 - i.2) / 1.2;
-        ChinaStockDayK::new_with_params(i.0, date, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9)
+        ChinaStockDayK::new_with_params(i.0, date, i.2, i.3, i.4, i.5, i.6, i.7, i.8, i.9, i.10)
     }
 }
 
@@ -133,6 +132,7 @@ impl ChinaStockDayK {
         high: f64,
         low: f64,
         close: f64,
+        pre_close: f64,
         change: f64,
         chg_percent: f64,
         vol: f64,
@@ -145,6 +145,7 @@ impl ChinaStockDayK {
             high,
             low,
             close,
+            pre_close,
             change,
             chg_percent,
             vol,

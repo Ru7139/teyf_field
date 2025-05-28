@@ -89,14 +89,15 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
 }
 
 #[tokio::test]
-#[ignore]
+// #[ignore]
 async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let year = 2022;
-    let folder = format!(
-        "src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/{}",
-        year
-    );
-    super::controller::mix_tools::download_every_stock_year_dayk_data(year, &folder, 12).await?;
+    for i in 2000..=2024 {
+        let folder = format!("src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/{i}",);
+        super::controller::mix_tools::download_every_stock_year_dayk_data(i, &folder, 12).await?;
+        println!("Let me sleep for 120s");
+        std::thread::sleep(std::time::Duration::from_secs(120));
+    }
+
     Ok(())
 }
 
@@ -109,9 +110,9 @@ fn convert_chinadayk_test() {
 }
 
 #[test]
-#[ignore]
+// #[ignore]
 fn convert_one_folder_chinadayk_test() -> Result<(), Box<dyn std::error::Error>> {
-    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2021/";
+    let dir_path = "/Users/chenzhi/Desktop/Rust/teyf_field/src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/2016/";
 
     let ignored = [".DS_Store", "Thumbs.db"];
     let file_paths: Vec<std::path::PathBuf> = walkdir::WalkDir::new(dir_path)
