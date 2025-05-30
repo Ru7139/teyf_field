@@ -41,11 +41,12 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
         create_dir_all(folder_path)?;
     }
 
-    let is_leap = (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize;
+    let is_leap =
+        |year: i32| -> usize { (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize };
     let mut date_vec: Vec<i32> = Vec::with_capacity(366);
 
     date_vec.extend(
-        YEAR_DAYS[is_leap]
+        YEAR_DAYS[is_leap(year)]
             .into_iter()
             .enumerate()
             .flat_map(|(m, d)| (1..=d).map(move |x| year * 10000 + (m as i32 + 1) * 100 + x)),
@@ -63,6 +64,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
 
     let dispatcher = tokio::spawn(async move {
         let sem = Arc::new(Semaphore::new(num_workers));
+        let timer = done_fetch_timer.clone();
         while let Some((ymd, week_day_num, text)) = rx.recv().await {
             let sem_clone = sem.clone();
             let permit = sem_clone.acquire_owned().await.unwrap();
@@ -76,7 +78,10 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
                         if let Err(e) = file.write_all(text.as_bytes()).await {
                             eprintln!("写入失败 {}: {:?}", file_path, e);
                         } else {
-                            counter.fetch_add(1, Ordering::SeqCst);
+                            let c_num = counter.fetch_add(1, Ordering::SeqCst);
+                            if c_num % 10 == 0 {
+                                println!("fetch {} ---> {:?}", c_num, timer.elapsed());
+                            }
                         }
                     }
                     Err(e) => {
