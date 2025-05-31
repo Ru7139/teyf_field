@@ -39,8 +39,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     let begin_to_fetch_year = year;
     dbg!(begin_to_fetch_year);
 
-    let is_leap =
-        |year: i32| -> usize { (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize };
+    let is_leap = |y: i32| -> usize { (y % 4 == 0 && (y % 400 == 0 || y % 100 != 0)) as usize };
 
     let (tx, mut rx) = mpsc::channel::<(i32, i32, String)>(CONCURRENT_DOWNLOAD_LIMIT * 2);
 
