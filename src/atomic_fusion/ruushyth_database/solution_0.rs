@@ -302,3 +302,16 @@ impl From<(String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<
 #[rustfmt::skip]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Record { id: surrealdb::RecordId }
+
+// let db = Surreal::new::<Client>("127.0.0.1:8000").await?;
+// db.use_ns("your_ns").use_db("your_db").await?;
+
+// let mut batch: Vec<surrealdb::sql::Value> = vec![];
+// for row in all_rows {
+//     let map = serde_json::to_value(row)?.into(); // surrealdb::sql::Object
+//     batch.push(map);
+// }
+
+// db.query("INSERT INTO daily_data VALUE $data")
+//     .bind(("data", batch))
+//     .await?;
