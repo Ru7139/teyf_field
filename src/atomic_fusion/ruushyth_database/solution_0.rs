@@ -1,7 +1,6 @@
 use futures::{StreamExt, stream};
 use num_cpus;
 use rayon::prelude::*;
-use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
@@ -20,6 +19,10 @@ use tokio::{
     task::JoinSet,
 };
 use walkdir::WalkDir;
+
+use surrealdb::{Surreal, engine::remote::ws::Ws, opt::auth::Root};
+
+type SdbClient = surrealdb::engine::remote::ws::Client;
 
 const TUSHARE_URL: &str = "http://api.tushare.pro";
 const DAILY_API: &str = "daily";
@@ -47,7 +50,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     let (tx, mut rx) = mpsc::channel::<(i32, i32, String)>(CONCURRENT_DOWNLOAD_LIMIT * 2);
 
     // 请求tushare数据
-    let client = Client::new();
+    let client = reqwest::Client::new();
     let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOAD_LIMIT));
     let downloaded_file_counter = Arc::new(AtomicUsize::new(0));
 
@@ -237,3 +240,50 @@ pub async fn deserialize_folder_tushare_file_to_vec(
 
     Ok(results)
 }
+
+#[rustfmt::skip]
+pub async fn ws_root_signin_local_sdb(port: u16, user: &str,pass: &str)
+-> Result<Surreal<SdbClient>, Box<dyn std::error::Error>> {
+    let sdb: Surreal<SdbClient> = Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
+    sdb.signin(Root { username: user, password: pass }).await?;
+    Ok(sdb)
+}
+
+#[rustfmt::skip]
+pub async fn use_ns_db_record_tushareinner(
+    sdb: &Surreal<SdbClient>, namespace: &str, database: &str, data: TushareInnerData, concurrent_limit: usize,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    sdb.use_ns(namespace).use_db(database).await?;
+
+    futures::stream::iter(data.items)
+        .map(|x| {
+            let sdb = sdb.clone();
+            let y = x.clone();
+            async move { sdb.create((x.1, x.0)).content(SdbStockStruct::from(y)).await }
+        })
+        .buffer_unordered(concurrent_limit)
+        .collect::<Vec<Result<Option<Record>, surrealdb::Error>>>()
+        .await
+        .into_iter()
+        .collect::<Result<Vec<_>, _>>()?;
+
+    Ok(())
+}
+
+#[rustfmt::skip]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct SdbStockStruct { code: String, date: u32, open: f64, high: f64, low: f64, close: f64, pre_close: Option<f64>, change: Option<f64>, chg_percent: Option<f64>, vol: f64, amount: Option<f64> }
+
+#[rustfmt::skip]
+impl From<(String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<f64>, f64, Option<f64>)> for SdbStockStruct
+{   // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
+    fn from(i: (String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<f64>, f64, Option<f64>))
+    -> Self {
+        let date_u32 = i.1.parse::<u32>().unwrap();
+        SdbStockStruct {code: i.0, date: date_u32, open: i.2, high: i.3, low: i.4, close: i.5, pre_close: i.6, change: i.7, chg_percent: i.8, vol: i.9, amount: i.10}
+    }
+}
+
+#[rustfmt::skip]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct Record { id: surrealdb::RecordId }
