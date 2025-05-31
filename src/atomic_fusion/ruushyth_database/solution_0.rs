@@ -249,11 +249,18 @@ pub async fn deserialize_folder_tushare_file_to_vec(
 // | 异步         | 不支持异步函数                     | 原生异步
 // | 用于文件/网络 | 不合适                            | 非常合适
 
-#[rustfmt::skip]
-pub async fn ws_root_signin_local_sdb(port: u16, user: &str,pass: &str)
--> Result<Surreal<SdbClient>, Box<dyn std::error::Error + Send + Sync>> {
+// #[rustfmt::skip]
+pub async fn ws_root_signin_local_sdb(
+    port: u16,
+    user: &str,
+    pass: &str,
+) -> Result<Surreal<SdbClient>, Box<dyn std::error::Error + Send + Sync>> {
     let sdb: Surreal<SdbClient> = Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
-    sdb.signin(Root { username: user, password: pass }).await?;
+    sdb.signin(Root {
+        username: user,
+        password: pass,
+    })
+    .await?;
     println!("Connected into surrealdb with ws");
     Ok(sdb)
 }
