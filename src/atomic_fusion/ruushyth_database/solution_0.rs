@@ -119,7 +119,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     // 多workers处理接收到的文件
     let folder_path = folder_path.to_string();
     let counter = Arc::clone(&downloaded_file_counter);
-    let sem = Arc::new(Semaphore::new(num_cpus::get()));
+    let sem = Arc::new(Semaphore::new(CONCURRENT_DOWNLOAD_LIMIT));
 
     let dispatcher = tokio::spawn(async move {
         let timer = Instant::now();
@@ -237,15 +237,24 @@ pub async fn deserialize_folder_tushare_file_to_vec(
             }
         })
         .collect();
-
+    println!("All folder files are abled to be converted into TushareInnerData");
     Ok(results)
 }
 
+// tokio和rayon的对比
+// | 特性/用途    | Rayon（同步并行）                 | Tokio（异步并发）
+// | ---------   | ---------------------           | ---------------------
+// | 编程模型     | 多线程并行                         | 单线程事件循环 + 异步任务调度
+// | 适合什么？    | CPU 密集型：压缩、加密、JSON解析等   | IO 密集型：网络请求、文件读写、数据库等
+// | 异步支持？    | ❌ 不支持异步函数                   | ✅ 原生异步
+// | 用于文件/网络 | ❌ 不合适                          | ✅ 非常合适
+
 #[rustfmt::skip]
 pub async fn ws_root_signin_local_sdb(port: u16, user: &str,pass: &str)
--> Result<Surreal<SdbClient>, Box<dyn std::error::Error>> {
+-> Result<Surreal<SdbClient>, Box<dyn std::error::Error + Send + Sync>> {
     let sdb: Surreal<SdbClient> = Surreal::new::<Ws>(format!("127.0.0.1:{}", port)).await?;
     sdb.signin(Root { username: user, password: pass }).await?;
+    println!("Connected into surrealdb with ws");
     Ok(sdb)
 }
 
