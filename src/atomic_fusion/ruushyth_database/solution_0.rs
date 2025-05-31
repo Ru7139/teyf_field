@@ -34,7 +34,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     year: i32,
     folder_path: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    let done_fetch_timer = Instant::now();
+    let out_side_timer = Instant::now();
     dbg!("Begin to fetch");
 
     if !Path::new(folder_path).exists() {
@@ -43,6 +43,16 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
 
     let is_leap =
         |year: i32| -> usize { (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize };
+
+    let (tx, mut rx) = mpsc::channel::<(i32, i32, String)>(CONCURRENT_DOWNLOAD_LIMIT * 2);
+
+    // 请求任务（受限于并发控制）
+    let client = Client::new();
+    let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOAD_LIMIT));
+    let downloaded_file_counter = Arc::new(AtomicUsize::new(0));
+
+    let mut tasks = Vec::new();
+
     let mut date_vec: Vec<i32> = Vec::with_capacity(366);
 
     date_vec.extend(
@@ -52,49 +62,6 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
             .flat_map(|(m, d)| (1..=d).map(move |x| year * 10000 + (m as i32 + 1) * 100 + x)),
     );
 
-    let client = Client::new();
-    let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOAD_LIMIT));
-    let (tx, mut rx) = mpsc::channel::<(i32, i32, String)>(CONCURRENT_DOWNLOAD_LIMIT * 2);
-    let downloaded_file_counter = Arc::new(AtomicUsize::new(0));
-
-    // 👷 启动单个调度器，它负责把任务发给多 worker
-    let folder_path_clone = folder_path.to_string();
-    let counter_clone = Arc::clone(&downloaded_file_counter);
-    let num_workers = num_cpus::get();
-
-    let dispatcher = tokio::spawn(async move {
-        let sem = Arc::new(Semaphore::new(num_workers));
-        let timer = done_fetch_timer.clone();
-        while let Some((ymd, week_day_num, text)) = rx.recv().await {
-            let sem_clone = sem.clone();
-            let permit = sem_clone.acquire_owned().await.unwrap();
-            let path = folder_path_clone.clone();
-            let counter = Arc::clone(&counter_clone);
-
-            tokio::spawn(async move {
-                let file_path = format!("{}/rsps_{}_[{}]", path, ymd, week_day_num);
-                match File::create(&file_path).await {
-                    Ok(mut file) => {
-                        if let Err(e) = file.write_all(text.as_bytes()).await {
-                            eprintln!("写入失败 {}: {:?}", file_path, e);
-                        } else {
-                            let c_num = counter.fetch_add(1, Ordering::SeqCst);
-                            if c_num % 10 == 0 {
-                                println!("fetch {} ---> {:?}", c_num, timer.elapsed());
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        eprintln!("创建文件失败 {}: {:?}", file_path, e);
-                    }
-                }
-                drop(permit); // 释放并发 worker 限制
-            });
-        }
-    });
-
-    // 📤 请求任务（受限于并发控制）
-    let mut tasks = Vec::new();
     for ymd in date_vec {
         let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
         let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
@@ -141,6 +108,43 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
         tasks.push(task);
     }
 
+    // 多workers处理接收到的文件
+    let folder_path_clone = folder_path.to_string();
+    let counter_clone = Arc::clone(&downloaded_file_counter);
+    let num_workers = num_cpus::get();
+
+    let dispatcher = tokio::spawn(async move {
+        let sem = Arc::new(Semaphore::new(num_workers));
+        let timer = Instant::now();
+
+        while let Some((ymd, week_day_num, text)) = rx.recv().await {
+            let sem_clone = sem.clone();
+            let permit = sem_clone.acquire_owned().await.unwrap();
+            let path = folder_path_clone.clone();
+            let counter = Arc::clone(&counter_clone);
+
+            tokio::spawn(async move {
+                let file_path = format!("{}/rsps_{}_[{}]", path, ymd, week_day_num);
+                match File::create(&file_path).await {
+                    Ok(mut file) => {
+                        if let Err(e) = file.write_all(text.as_bytes()).await {
+                            eprintln!("写入失败 {}: {:?}", file_path, e);
+                        } else {
+                            let c_num = counter.fetch_add(1, Ordering::SeqCst);
+                            if c_num % 10 == 0 {
+                                println!("fetch {} ---> {:?}", c_num, timer.elapsed());
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        eprintln!("创建文件失败 {}: {:?}", file_path, e);
+                    }
+                }
+                drop(permit); // 释放并发 worker 限制
+            });
+        }
+    });
+
     // 等待所有请求任务完成
     for task in tasks {
         let _ = task.await;
@@ -150,7 +154,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     let _ = dispatcher.await;
 
     dbg!(downloaded_file_counter);
-    dbg!(done_fetch_timer.elapsed());
+    dbg!(out_side_timer.elapsed());
 
     Ok(())
 }

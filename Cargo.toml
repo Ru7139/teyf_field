@@ -41,3 +41,4 @@ plotters = "*"
 #freya = "*"
 
 num_cpus = "*"
+itertools = "*"
