@@ -106,19 +106,20 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
             }),
     );
 
-    // 多workers处理接收到的文件
+    // 若文件夹不存在，则创建
     if !Path::new(folder_path).exists() {
-        create_dir_all(folder_path)?;
+        create_dir_all(folder_path).expect("Unable to create parent folder or itself");
     }
 
+    // 多workers处理接收到的文件
     let folder_path = folder_path.to_string();
     let counter = Arc::clone(&downloaded_file_counter);
     let sem = Arc::new(Semaphore::new(num_cpus::get()));
-    let timer = Instant::now();
-
-    let mut write_tasks = JoinSet::new();
 
     let dispatcher = tokio::spawn(async move {
+        let timer = Instant::now();
+        let mut write_tasks = JoinSet::new();
+
         while let Some((ymd, week_day_num, text)) = rx.recv().await {
             let sem = Arc::clone(&sem);
             let counter = Arc::clone(&counter);
@@ -132,7 +133,7 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
                     Ok(mut file) => match file.write_all(text.as_bytes()).await {
                         Ok(_) => {
                             let count = counter.fetch_add(1, Ordering::SeqCst) + 1;
-                            if count % 10 == 0 {
+                            if count % 20 == 0 {
                                 println!("fetched {} ---> {:?}", count, timer.elapsed());
                             }
                         }
