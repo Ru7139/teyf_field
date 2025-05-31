@@ -15,6 +15,7 @@ use tokio::{
     fs::File,
     io::AsyncWriteExt,
     sync::{Semaphore, mpsc},
+    task::JoinSet,
 };
 
 const TUSHARE_URL: &str = "http://api.tushare.pro";
@@ -35,122 +36,128 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     folder_path: &str,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let out_side_timer = Instant::now();
-    dbg!("Begin to fetch");
-
-    if !Path::new(folder_path).exists() {
-        create_dir_all(folder_path)?;
-    }
+    let begin_to_fetch_year = year;
+    dbg!(begin_to_fetch_year);
 
     let is_leap =
         |year: i32| -> usize { (year % 4 == 0 && (year % 400 == 0 || year % 100 != 0)) as usize };
 
     let (tx, mut rx) = mpsc::channel::<(i32, i32, String)>(CONCURRENT_DOWNLOAD_LIMIT * 2);
 
-    // 请求任务（受限于并发控制）
+    // 请求tushare数据
     let client = Client::new();
     let semaphore = Arc::new(Semaphore::new(CONCURRENT_DOWNLOAD_LIMIT));
     let downloaded_file_counter = Arc::new(AtomicUsize::new(0));
 
     let mut tasks = Vec::new();
 
-    let mut date_vec: Vec<i32> = Vec::with_capacity(366);
-
-    date_vec.extend(
+    tasks.extend(
         YEAR_DAYS[is_leap(year)]
-            .into_iter()
+            .iter()
             .enumerate()
-            .flat_map(|(m, d)| (1..=d).map(move |x| year * 10000 + (m as i32 + 1) * 100 + x)),
-    );
+            .flat_map(move |(m, &d)| {
+                (1..=d).map(move |day| year * 10000 + (m as i32 + 1) * 100 + day)
+            })
+            .filter_map(|ymd| {
+                let (y, m, d) = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
+                let y_adj = if m >= 3 { y } else { y - 1 };
+                let ya = y_adj + y_adj / 4 - y_adj / 100 + y_adj / 400;
+                let week_day_num = (ya + SAKAMOTO_WEEKDAY_ARRAY[(m - 1) as usize] + d) % 7;
 
-    for ymd in date_vec {
-        let dt = (ymd / 10000, (ymd / 100) % 100, ymd % 100);
-        let y = if dt.1 >= 3 { dt.0 } else { dt.0 - 1 };
-        let ya = y + y / 4 - y / 100 + y / 400;
-        let week_day_num = (ya + SAKAMOTO_WEEKDAY_ARRAY[(dt.1 - 1) as usize] + dt.2) % 7;
-
-        if week_day_num == 6 || week_day_num == 0 {
-            continue;
-        }
-
-        let client = client.clone();
-        let semaphore = Arc::clone(&semaphore);
-        let tx = tx.clone();
-
-        let task = tokio::spawn(async move {
-            let _permit = semaphore.acquire().await.unwrap();
-
-            let response = client
-                .post(TUSHARE_URL)
-                .json(&json!({
-                    "api_name": DAILY_API,
-                    "token": TOKEN_RU,
-                    "params": json!({ "start_date": ymd, "end_date": ymd }),
-                    "fields": N_FIELDS
-                }))
-                .send()
-                .await;
-
-            match response {
-                Ok(resp) if resp.status().is_success() => {
-                    if let Ok(text) = resp.text().await {
-                        let _ = tx.send((ymd, week_day_num, text)).await;
-                    }
+                // 跳过周六日
+                if week_day_num == 6 || week_day_num == 0 {
+                    None
+                } else {
+                    Some((ymd, week_day_num))
                 }
-                Ok(resp) => {
-                    eprintln!("请求失败 {}: {:?}", ymd, resp.status());
-                }
-                Err(e) => {
-                    eprintln!("网络错误 {}: {:?}", ymd, e);
-                }
-            }
-        });
+            })
+            .map(|(ymd, week_day_num)| {
+                let client = client.clone();
+                let semaphore = Arc::clone(&semaphore);
+                let tx = tx.clone();
 
-        tasks.push(task);
-    }
+                tokio::spawn(async move {
+                    let _permit = semaphore.acquire().await.unwrap();
 
-    // 多workers处理接收到的文件
-    let folder_path_clone = folder_path.to_string();
-    let counter_clone = Arc::clone(&downloaded_file_counter);
-    let num_workers = num_cpus::get();
-
-    let dispatcher = tokio::spawn(async move {
-        let sem = Arc::new(Semaphore::new(num_workers));
-        let timer = Instant::now();
-
-        while let Some((ymd, week_day_num, text)) = rx.recv().await {
-            let sem_clone = sem.clone();
-            let permit = sem_clone.acquire_owned().await.unwrap();
-            let path = folder_path_clone.clone();
-            let counter = Arc::clone(&counter_clone);
-
-            tokio::spawn(async move {
-                let file_path = format!("{}/rsps_{}_[{}]", path, ymd, week_day_num);
-                match File::create(&file_path).await {
-                    Ok(mut file) => {
-                        if let Err(e) = file.write_all(text.as_bytes()).await {
-                            eprintln!("写入失败 {}: {:?}", file_path, e);
-                        } else {
-                            let c_num = counter.fetch_add(1, Ordering::SeqCst);
-                            if c_num % 10 == 0 {
-                                println!("fetch {} ---> {:?}", c_num, timer.elapsed());
+                    match client
+                        .post(TUSHARE_URL)
+                        .json(&json!({
+                            "api_name": DAILY_API,
+                            "token": TOKEN_RU,
+                            "params": { "start_date": ymd, "end_date": ymd },
+                            "fields": N_FIELDS
+                        }))
+                        .send()
+                        .await
+                    {
+                        Ok(resp) if resp.status().is_success() => {
+                            if let Ok(text) = resp.text().await {
+                                let _ = tx.send((ymd, week_day_num, text)).await;
                             }
                         }
+                        Ok(resp) => {
+                            eprintln!("请求失败 {}: {:?}", ymd, resp.status());
+                        }
+                        Err(e) => {
+                            eprintln!("网络错误 {}: {:?}", ymd, e);
+                        }
                     }
+                })
+            }),
+    );
+
+    // 多workers处理接收到的文件
+    if !Path::new(folder_path).exists() {
+        create_dir_all(folder_path)?;
+    }
+
+    let folder_path = folder_path.to_string();
+    let counter = Arc::clone(&downloaded_file_counter);
+    let sem = Arc::new(Semaphore::new(num_cpus::get()));
+    let timer = Instant::now();
+
+    let mut write_tasks = JoinSet::new();
+
+    let dispatcher = tokio::spawn(async move {
+        while let Some((ymd, week_day_num, text)) = rx.recv().await {
+            let sem = Arc::clone(&sem);
+            let counter = Arc::clone(&counter);
+            let folder_path = folder_path.clone();
+
+            write_tasks.spawn(async move {
+                let _permit = sem.acquire_owned().await.unwrap();
+                let file_path = format!("{}/rsps_{}_[{}]", folder_path, ymd, week_day_num);
+
+                match File::create(&file_path).await {
+                    Ok(mut file) => match file.write_all(text.as_bytes()).await {
+                        Ok(_) => {
+                            let count = counter.fetch_add(1, Ordering::SeqCst) + 1;
+                            if count % 10 == 0 {
+                                println!("fetched {} ---> {:?}", count, timer.elapsed());
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("写入失败 {}: {:?}", file_path, e);
+                        }
+                    },
                     Err(e) => {
                         eprintln!("创建文件失败 {}: {:?}", file_path, e);
                     }
                 }
-                drop(permit); // 释放并发 worker 限制
             });
+
+            while let Some(res) = write_tasks.join_next().await {
+                res.unwrap();
+            }
         }
     });
 
     // 等待所有请求任务完成
     for task in tasks {
-        let _ = task.await;
+        let _ = task.await?; // 显式忽略返回值,避免编译器警告
     }
 
-    drop(tx); // 关闭发送端，让 dispatcher 退出
+    drop(tx); // 关闭发送端(http请求)
     let _ = dispatcher.await;
 
     dbg!(downloaded_file_counter);
