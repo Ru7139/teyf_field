@@ -1,22 +1,25 @@
+use futures::{StreamExt, stream};
+use num_cpus;
+use rayon::prelude::*;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::{
-    fs::create_dir_all,
-    path::Path,
+    fs::{create_dir_all, read_to_string},
+    path::{Path, PathBuf},
     sync::{
         Arc,
         atomic::{AtomicUsize, Ordering},
     },
     time::Instant,
 };
-
-use num_cpus;
-use reqwest::Client;
-use serde_json::json;
 use tokio::{
     fs::File,
     io::AsyncWriteExt,
     sync::{Semaphore, mpsc},
     task::JoinSet,
 };
+use walkdir::WalkDir;
 
 const TUSHARE_URL: &str = "http://api.tushare.pro";
 const DAILY_API: &str = "daily";
@@ -164,4 +167,73 @@ pub async fn http_fetch_tushare_year_dayk_use_ru_token(
     dbg!(out_side_timer.elapsed());
 
     Ok(())
+}
+
+// {
+//     "request_id":"be79a9b4-f80f-4e76-8df4-c64d68d2bbf1",
+//     "code":0,
+//     "data":{
+//         "fields":["ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"],
+//         "items":[
+//             ["600860.SH","20000104",6.68,6.9,6.6,6.79,6.57,0.22,3.35,5916.0,4003.081],
+//             ["600701.SH","20000104",11.32,11.8,11.18,11.67,11.23,0.44,3.92,8644.0,10034.544],
+//             ["000001.SZ","20000104",17.5,18.55,17.2,18.29,17.45,0.84,4.81,82161.0,147325.3568],
+//             ...
+//             ...
+//         ]
+//         "has_more":false,
+//         "count":-1
+//     },
+//     "msg":""
+// }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+struct TushareData {
+    request_id: String,
+    code: i32,
+    data: TushareInnerData,
+    msg: String,
+}
+
+#[rustfmt::skip]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TushareInnerData {
+    pub fields: Vec<String>,
+    pub items: Vec<(String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<f64>, f64, Option<f64>)>,
+    // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
+}
+
+pub async fn deserialize_folder_tushare_file_to_vec(
+    tushare_folder_path: &str,
+) -> Result<Vec<TushareInnerData>, Box<dyn std::error::Error + Send + Sync>> {
+    let ignored_files = [".DS_Store", "Thumbs.db"];
+
+    let file_paths: Vec<PathBuf> = WalkDir::new(tushare_folder_path)
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|entry| {
+            entry.file_type().is_file()
+                && !ignored_files.contains(&entry.file_name().to_string_lossy().as_ref())
+        })
+        .map(|entry| entry.path().to_path_buf())
+        .collect();
+
+    let results: Vec<_> = file_paths
+        .par_iter() // 使用 Rayon 多线程并行迭代
+        .filter_map(|path| match read_to_string(path) {
+            Ok(content) => match serde_json::from_str::<TushareData>(&content) {
+                Ok(t_data) => Some(t_data.data),
+                Err(e) => {
+                    eprintln!("解析失败 {:?}: {}", path, e);
+                    None
+                }
+            },
+            Err(e) => {
+                eprintln!("读取失败 {:?}: {}", path, e);
+                None
+            }
+        })
+        .collect();
+
+    Ok(results)
 }
