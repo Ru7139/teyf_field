@@ -281,8 +281,8 @@ pub async fn use_ns_db_record_tushareinner(
             batch.push(serde_json::to_string(&u)?.into());
         }
 
-        sdb.query("INSERT INTO daily_data $data")
-            .bind(("data", batch))
+        sdb.query("INSERT INTO daily_data {a:100}")
+            // .bind(("data", batch))
             .await?;
     }
 
