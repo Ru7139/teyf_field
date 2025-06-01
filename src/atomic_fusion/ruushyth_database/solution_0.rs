@@ -264,23 +264,30 @@ pub async fn ws_root_signin_local_sdb(
     Ok(sdb)
 }
 
-#[rustfmt::skip]
 pub async fn use_ns_db_record_tushareinner(
-    sdb: &Surreal<SdbClient>, namespace: &str, database: &str, data: TushareInnerData, concurrent_limit: usize,
+    sdb: &Surreal<SdbClient>,
+    namespace: &str,
+    database: &str,
+    data: Vec<TushareInnerData>,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     sdb.use_ns(namespace).use_db(database).await?;
 
-    futures::stream::iter(data.items)
-        .map(|x| {
-            let sdb = sdb.clone();
-            let y = x.clone();
-            async move { sdb.create((x.1, x.0)).content(SdbStockStruct::from(y)).await }
-        })
-        .buffer_unordered(concurrent_limit)
-        .collect::<Vec<Result<Option<Record>, surrealdb::Error>>>()
-        .await
-        .into_iter()
-        .collect::<Result<Vec<_>, _>>()?;
+    for i in data {
+        let mut batch: Vec<surrealdb::sql::Value> = Vec::with_capacity(i.items.len());
+        for j in i.items {
+            let u = SdbStockStruct::from(j.clone());
+
+            if j.0 == "600001.SH" {
+                println!("{:?}", u);
+            }
+
+            batch.push(serde_json::to_string(&u)?.into());
+        }
+
+        sdb.query("INSERT INTO daily_data $data")
+            .bind(("data", batch))
+            .await?;
+    }
 
     Ok(())
 }
@@ -302,16 +309,3 @@ impl From<(String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<
 #[rustfmt::skip]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct Record { id: surrealdb::RecordId }
-
-// let db = Surreal::new::<Client>("127.0.0.1:8000").await?;
-// db.use_ns("your_ns").use_db("your_db").await?;
-
-// let mut batch: Vec<surrealdb::sql::Value> = vec![];
-// for row in all_rows {
-//     let map = serde_json::to_value(row)?.into(); // surrealdb::sql::Object
-//     batch.push(map);
-// }
-
-// db.query("INSERT INTO daily_data VALUE $data")
-//     .bind(("data", batch))
-//     .await?;
