@@ -1,3 +1,4 @@
+use dioxus::html::g::format;
 use futures::{StreamExt, stream};
 use num_cpus;
 use rayon::prelude::*;
@@ -274,16 +275,35 @@ pub async fn use_ns_db_record_tushareinner(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     sdb.use_ns(namespace).use_db(database).await?;
 
+    let mut count = 0u32;
     for i in data {
-        let mut batch: Vec<surrealdb::sql::Value> = Vec::with_capacity(i.items.len());
+        count += 1;
+        let mut sa = String::new();
         for j in i.items {
+            let insert_string: String = format!("{}{}", "INSERT INTO Foath_", count);
             let u = SdbStockStruct::from(j);
-            batch.push(serde_json::to_string(&u)?.into());
+            let k = format!(
+                // "{} code: {}, data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
+                "{} data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
+                "{",
+                // u.code,
+                u.date,
+                u.open,
+                u.high,
+                u.low,
+                u.close,
+                u.pre_close,
+                u.change,
+                u.chg_percent,
+                u.vol,
+                u.amount,
+                "};"
+            );
+            let d = format!("{} {}", insert_string, k);
+            sa.push_str(&d);
         }
-
-        sdb.query("INSERT INTO daily_data {a:100}")
-            // .bind(("data", batch))
-            .await?;
+        // println!("{}", &sa);
+        sdb.query(&sa).await?;
     }
 
     Ok(())
