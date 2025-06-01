@@ -6894,6 +6894,7 @@ dependencies = [
  "rand 0.9.1",
  "rayon",
  "reqwest",
+ "rust_decimal",
  "serde",
  "serde-xml-rs",
  "serde_json",

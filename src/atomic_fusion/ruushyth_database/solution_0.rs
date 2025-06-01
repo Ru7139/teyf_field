@@ -20,6 +20,8 @@ use tokio::{
 };
 use walkdir::WalkDir;
 
+use rust_decimal::{Decimal, prelude::FromPrimitive};
+
 use surrealdb::{Surreal, engine::remote::ws::Ws, opt::auth::Root};
 
 type SdbClient = surrealdb::engine::remote::ws::Client;
@@ -275,12 +277,7 @@ pub async fn use_ns_db_record_tushareinner(
     for i in data {
         let mut batch: Vec<surrealdb::sql::Value> = Vec::with_capacity(i.items.len());
         for j in i.items {
-            let u = SdbStockStruct::from(j.clone());
-
-            if j.0 == "600001.SH" {
-                println!("{:?}", u);
-            }
-
+            let u = SdbStockStruct::from(j);
             batch.push(serde_json::to_string(&u)?.into());
         }
 
@@ -294,15 +291,54 @@ pub async fn use_ns_db_record_tushareinner(
 
 #[rustfmt::skip]
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct SdbStockStruct { code: String, date: u32, open: f64, high: f64, low: f64, close: f64, pre_close: Option<f64>, change: Option<f64>, chg_percent: Option<f64>, vol: f64, amount: Option<f64> }
+pub struct SdbStockStruct { code: String, date: u32, open: Decimal, high: Decimal, low: Decimal, close: Decimal, pre_close: Decimal, change: Decimal, chg_percent: Decimal, vol: Decimal, amount: Decimal }
 
-#[rustfmt::skip]
-impl From<(String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<f64>, f64, Option<f64>)> for SdbStockStruct
-{   // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
-    fn from(i: (String, String, f64, f64, f64, f64, Option<f64>, Option<f64>, Option<f64>, f64, Option<f64>))
-    -> Self {
+// #[rustfmt::skip]
+impl
+    From<(
+        String,
+        String,
+        f64,
+        f64,
+        f64,
+        f64,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        f64,
+        Option<f64>,
+    )> for SdbStockStruct
+{
+    // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
+    fn from(
+        i: (
+            String,
+            String,
+            f64,
+            f64,
+            f64,
+            f64,
+            Option<f64>,
+            Option<f64>,
+            Option<f64>,
+            f64,
+            Option<f64>,
+        ),
+    ) -> Self {
         let date_u32 = i.1.parse::<u32>().unwrap();
-        SdbStockStruct {code: i.0, date: date_u32, open: i.2, high: i.3, low: i.4, close: i.5, pre_close: i.6, change: i.7, chg_percent: i.8, vol: i.9, amount: i.10}
+        SdbStockStruct {
+            code: i.0,
+            date: date_u32,
+            open: Decimal::from_f64(i.2).unwrap(),
+            high: Decimal::from_f64(i.3).unwrap(),
+            low: Decimal::from_f64(i.4).unwrap(),
+            close: Decimal::from_f64(i.5).unwrap(),
+            pre_close: Decimal::from_f64(i.6.unwrap_or(0f64)).unwrap(),
+            change: Decimal::from_f64(i.7.unwrap_or(0f64)).unwrap(),
+            chg_percent: Decimal::from_f64(i.8.unwrap_or(0f64)).unwrap(),
+            vol: Decimal::from_f64(i.9).unwrap(),
+            amount: Decimal::from_f64(i.10.unwrap_or(0f64)).unwrap(),
+        }
     }
 }
 
