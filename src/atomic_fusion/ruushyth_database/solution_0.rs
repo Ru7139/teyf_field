@@ -284,7 +284,6 @@ pub async fn use_ns_db_record_tushareinner(
             let u = SdbStockStruct::from(j);
             let k = format!(
                 "{} code: {}{}{}, data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
-                // "{} data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
                 "{",
                 r#"""#,
                 u.code,
