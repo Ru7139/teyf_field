@@ -1,4 +1,3 @@
-use dioxus::html::g::format;
 use futures::{StreamExt, stream};
 use num_cpus;
 use rayon::prelude::*;
@@ -267,6 +266,10 @@ pub async fn ws_root_signin_local_sdb(
     Ok(sdb)
 }
 
+// 0"ts_code", 1"trade_date",
+// 2"open", 3"high", 4"low", 5"close",
+// 6"pre_close", 7"change", 8"pct_chg", 9"vol", 10"amount"
+
 pub async fn use_ns_db_record_tushareinner(
     sdb: &Surreal<SdbClient>,
     namespace: &str,
@@ -275,37 +278,65 @@ pub async fn use_ns_db_record_tushareinner(
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     sdb.use_ns(namespace).use_db(database).await?;
 
-    let mut count = 0u32;
     for i in data {
-        count += 1;
-        let mut sa = String::new();
+        let mut one_tushare_inner_data_sdbql = String::new();
         for j in i.items {
-            let insert_string: String = format!("{}{}", "INSERT INTO Foath_", count);
-            let u = SdbStockStruct::from(j);
-            let k = format!(
-                "{} code: {}{}{}, data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
+            let one_line_data = format!(
+                "INSERT INTO {}{}{} {} code: {}{}{}, date: {}, open: {}dec, high: {}dec, low: {}dec, close: {}dec, pre_close: {}dec, change: {}dec, chg_percent: {}dec, vol: <decimal>{}dec, amount:{}dec {}",
+                r#"`"#,
+                j.1.parse::<u32>().unwrap(), // table name
+                r#"`"#,
                 "{",
                 r#"""#,
-                u.code,
+                j.0, // code
                 r#"""#,
-                u.date,
-                u.open,
-                u.high,
-                u.low,
-                u.close,
-                u.pre_close,
-                u.change,
-                u.chg_percent,
-                u.vol,
-                u.amount,
-                "};"
+                j.1.parse::<u32>().unwrap(),                      // date
+                Decimal::from_f64(j.2).unwrap(),                  // open
+                Decimal::from_f64(j.3).unwrap(),                  // high
+                Decimal::from_f64(j.4).unwrap(),                  // low
+                Decimal::from_f64(j.5).unwrap(),                  // close
+                Decimal::from_f64(j.6.unwrap_or(0f64)).unwrap(),  // pre_close
+                Decimal::from_f64(j.7.unwrap_or(0f64)).unwrap(),  // change
+                Decimal::from_f64(j.8.unwrap_or(0f64)).unwrap(),  // chg_percent
+                Decimal::from_f64(j.9).unwrap(),                  // vol
+                Decimal::from_f64(j.10.unwrap_or(0f64)).unwrap(), // amount
+                "};",
             );
-            let d = format!("{} {}", insert_string, k);
-            sa.push_str(&d);
+            one_tushare_inner_data_sdbql.push_str(&one_line_data);
         }
-        // println!("{}", &sa);
-        sdb.query(&sa).await?;
+        sdb.query(&one_tushare_inner_data_sdbql).await?;
     }
+
+    // let mut count = 0u32;
+    // for i in data {
+    //     count += 1;
+    //     let mut sa = String::new();
+    //     for j in i.items {
+    //         let insert_string: String = format!("{}{}", "INSERT INTO Foath_", count);
+    //         let u = SdbStockStruct::from(j);
+    //         let k = format!(
+    //             "{} code: {}{}{}, data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
+    //             "{",
+    //             r#"""#,
+    //             u.code,
+    //             r#"""#,
+    //             u.date,
+    //             u.open,
+    //             u.high,
+    //             u.low,
+    //             u.close,
+    //             u.pre_close,
+    //             u.change,
+    //             u.chg_percent,
+    //             u.vol,
+    //             u.amount,
+    //             "};"
+    //         );
+    //         let d = format!("{} {}", insert_string, k);
+    //         sa.push_str(&d);
+    //     }
+    //     sdb.query(&sa).await?;
+    // }
 
     Ok(())
 }
