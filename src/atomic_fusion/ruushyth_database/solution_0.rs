@@ -307,93 +307,62 @@ pub async fn use_ns_db_record_tushareinner(
         sdb.query(&one_tushare_inner_data_sdbql).await?;
     }
 
-    // let mut count = 0u32;
-    // for i in data {
-    //     count += 1;
-    //     let mut sa = String::new();
-    //     for j in i.items {
-    //         let insert_string: String = format!("{}{}", "INSERT INTO Foath_", count);
-    //         let u = SdbStockStruct::from(j);
-    //         let k = format!(
-    //             "{} code: {}{}{}, data: {}, open: {}, high:{}, low:{}, close:{}, pre_close:{}, change:{}, chg_percent:{}, vol:{}, amount:{} {}",
-    //             "{",
-    //             r#"""#,
-    //             u.code,
-    //             r#"""#,
-    //             u.date,
-    //             u.open,
-    //             u.high,
-    //             u.low,
-    //             u.close,
-    //             u.pre_close,
-    //             u.change,
-    //             u.chg_percent,
-    //             u.vol,
-    //             u.amount,
-    //             "};"
-    //         );
-    //         let d = format!("{} {}", insert_string, k);
-    //         sa.push_str(&d);
-    //     }
-    //     sdb.query(&sa).await?;
-    // }
-
     Ok(())
 }
 
-#[rustfmt::skip]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SdbStockStruct { code: String, date: u32, open: Decimal, high: Decimal, low: Decimal, close: Decimal, pre_close: Decimal, change: Decimal, chg_percent: Decimal, vol: Decimal, amount: Decimal }
+// #[rustfmt::skip]
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct SdbStockStruct { code: String, date: u32, open: Decimal, high: Decimal, low: Decimal, close: Decimal, pre_close: Decimal, change: Decimal, chg_percent: Decimal, vol: Decimal, amount: Decimal }
+
+// // #[rustfmt::skip]
+// impl
+//     From<(
+//         String,
+//         String,
+//         f64,
+//         f64,
+//         f64,
+//         f64,
+//         Option<f64>,
+//         Option<f64>,
+//         Option<f64>,
+//         f64,
+//         Option<f64>,
+//     )> for SdbStockStruct
+// {
+//     // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
+//     fn from(
+//         i: (
+//             String,
+//             String,
+//             f64,
+//             f64,
+//             f64,
+//             f64,
+//             Option<f64>,
+//             Option<f64>,
+//             Option<f64>,
+//             f64,
+//             Option<f64>,
+//         ),
+//     ) -> Self {
+//         let date_u32 = i.1.parse::<u32>().unwrap();
+//         SdbStockStruct {
+//             code: i.0,
+//             date: date_u32,
+//             open: Decimal::from_f64(i.2).unwrap(),
+//             high: Decimal::from_f64(i.3).unwrap(),
+//             low: Decimal::from_f64(i.4).unwrap(),
+//             close: Decimal::from_f64(i.5).unwrap(),
+//             pre_close: Decimal::from_f64(i.6.unwrap_or(0f64)).unwrap(),
+//             change: Decimal::from_f64(i.7.unwrap_or(0f64)).unwrap(),
+//             chg_percent: Decimal::from_f64(i.8.unwrap_or(0f64)).unwrap(),
+//             vol: Decimal::from_f64(i.9).unwrap(),
+//             amount: Decimal::from_f64(i.10.unwrap_or(0f64)).unwrap(),
+//         }
+//     }
+// }
 
 // #[rustfmt::skip]
-impl
-    From<(
-        String,
-        String,
-        f64,
-        f64,
-        f64,
-        f64,
-        Option<f64>,
-        Option<f64>,
-        Option<f64>,
-        f64,
-        Option<f64>,
-    )> for SdbStockStruct
-{
-    // "ts_code","trade_date","open","high","low","close","pre_close","change","pct_chg","vol","amount"
-    fn from(
-        i: (
-            String,
-            String,
-            f64,
-            f64,
-            f64,
-            f64,
-            Option<f64>,
-            Option<f64>,
-            Option<f64>,
-            f64,
-            Option<f64>,
-        ),
-    ) -> Self {
-        let date_u32 = i.1.parse::<u32>().unwrap();
-        SdbStockStruct {
-            code: i.0,
-            date: date_u32,
-            open: Decimal::from_f64(i.2).unwrap(),
-            high: Decimal::from_f64(i.3).unwrap(),
-            low: Decimal::from_f64(i.4).unwrap(),
-            close: Decimal::from_f64(i.5).unwrap(),
-            pre_close: Decimal::from_f64(i.6.unwrap_or(0f64)).unwrap(),
-            change: Decimal::from_f64(i.7.unwrap_or(0f64)).unwrap(),
-            chg_percent: Decimal::from_f64(i.8.unwrap_or(0f64)).unwrap(),
-            vol: Decimal::from_f64(i.9).unwrap(),
-            amount: Decimal::from_f64(i.10.unwrap_or(0f64)).unwrap(),
-        }
-    }
-}
-
-#[rustfmt::skip]
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct Record { id: surrealdb::RecordId }
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// struct Record { id: surrealdb::RecordId }
