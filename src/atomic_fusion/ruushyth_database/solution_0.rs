@@ -211,6 +211,7 @@ pub struct TushareInnerData {
 pub async fn deserialize_folder_tushare_file_to_vec(
     tushare_folder_path: &str,
 ) -> Result<Vec<TushareInnerData>, Box<dyn std::error::Error + Send + Sync>> {
+    let timer = Instant::now();
     let ignored_files = [".DS_Store", "Thumbs.db"];
 
     let file_paths: Vec<PathBuf> = WalkDir::new(tushare_folder_path)
@@ -239,7 +240,10 @@ pub async fn deserialize_folder_tushare_file_to_vec(
             }
         })
         .collect();
-    println!("All folder files are abled to be converted into TushareInnerData");
+    println!(
+        "All folder files are abled to be converted into TushareInnerData ---> {:?}",
+        timer.elapsed()
+    );
     Ok(results)
 }
 
@@ -305,11 +309,10 @@ pub async fn use_ns_db_record_tushareinner(
             );
             one_tushare_inner_data_sdbql.push_str(&one_line_data);
         }
-
-        // sdb.query(&one_tushare_inner_data_sdbql).await?;
     }
     dbg!(t.elapsed());
-
+    sdb.query(&one_tushare_inner_data_sdbql).await?;
+    dbg!(t.elapsed());
     Ok(())
 }
 

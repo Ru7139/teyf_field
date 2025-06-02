@@ -14,7 +14,7 @@ async fn launch_bomb() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let download_folder = format!("{}/{}", folder, i);
         let data =
             super::solution_0::deserialize_folder_tushare_file_to_vec(&download_folder).await?;
-        super::solution_0::use_ns_db_record_tushareinner(&sdb, "ANS", "ADB2001", data).await?;
+        super::solution_0::use_ns_db_record_tushareinner(&sdb, "ANS", "ADBMK2024", data).await?;
     }
 
     Ok(())
