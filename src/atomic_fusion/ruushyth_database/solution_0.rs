@@ -279,6 +279,7 @@ pub async fn use_ns_db_record_tushareinner(
     sdb.use_ns(namespace).use_db(database).await?;
 
     for i in data {
+        let t = std::time::Instant::now();
         let mut one_tushare_inner_data_sdbql = String::new();
         for j in i.items {
             let one_line_data = format!(
@@ -304,7 +305,8 @@ pub async fn use_ns_db_record_tushareinner(
             );
             one_tushare_inner_data_sdbql.push_str(&one_line_data);
         }
-        sdb.query(&one_tushare_inner_data_sdbql).await?;
+        dbg!(t.elapsed());
+        // sdb.query(&one_tushare_inner_data_sdbql).await?;
     }
 
     Ok(())
