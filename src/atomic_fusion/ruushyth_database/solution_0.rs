@@ -283,8 +283,9 @@ pub async fn use_ns_db_record_tushareinner(
     sdb.use_ns(namespace).use_db(database).await?;
 
     let t = std::time::Instant::now();
-    let mut one_tushare_inner_data_sdbql = String::new();
+
     for i in data {
+        let mut one_tushare_inner_data_sdbql = String::new();
         for j in i.items {
             let one_line_data = format!(
                 "INSERT INTO {}{}{} {} code: {}{}{}, date: {}, open: {}dec, high: {}dec, low: {}dec, close: {}dec, pre_close: {}dec, change: {}dec, chg_percent: {}dec, vol: <decimal>{}dec, amount:{}dec {}",
@@ -308,11 +309,12 @@ pub async fn use_ns_db_record_tushareinner(
                 "};",
             );
             one_tushare_inner_data_sdbql.push_str(&one_line_data);
+            dbg!(t.elapsed());
+            sdb.query(&one_tushare_inner_data_sdbql).await?;
+            dbg!(t.elapsed());
         }
     }
-    dbg!(t.elapsed());
-    sdb.query(&one_tushare_inner_data_sdbql).await?;
-    dbg!(t.elapsed());
+
     Ok(())
 }
 
