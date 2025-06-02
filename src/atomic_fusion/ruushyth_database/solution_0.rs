@@ -1,5 +1,5 @@
-use futures::{StreamExt, stream};
-use num_cpus;
+// use futures::{StreamExt, stream};
+// use num_cpus;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -283,7 +283,7 @@ pub async fn use_ns_db_record_tushareinner(
     sdb.use_ns(namespace).use_db(database).await?;
 
     let t = std::time::Instant::now();
-    let mut counter = 0u32;
+    let mut table_counter = 0u32;
 
     for i in data {
         let mut one_tushare_inner_data_sdbql = String::new();
@@ -309,11 +309,10 @@ pub async fn use_ns_db_record_tushareinner(
                 Decimal::from_f64(j.10.unwrap_or(0f64)).unwrap(), // amount
                 "};",
             );
-
             one_tushare_inner_data_sdbql.push_str(&one_line_data);
         }
-        counter += 1;
-        dbg!(counter);
+        table_counter += 1;
+        dbg!(table_counter);
         sdb.query(&one_tushare_inner_data_sdbql).await?;
         dbg!(t.elapsed());
     }
