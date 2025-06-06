@@ -5,16 +5,13 @@ mod project {
     async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         let _side_running_server = tokio::spawn(async move {
             HttpServer::new(|| {
-                App::new()
-                    .route(
-                        "/helloworld",
-                        web::get()
-                            .to(|| async { HttpResponse::Ok().body("Hello World".to_string()) }),
-                    )
-                    .route(
-                        "/hello",
-                        web::get().to(|| async { HttpResponse::Ok().body("Hello".to_string()) }),
-                    )
+                App::new().service(
+                    web::resource("/method")
+                        .route(web::get().to(|| async { HttpResponse::Ok().body("Get") }))
+                        .route(web::post().to(|| async { HttpResponse::Ok().body("Post") }))
+                        .route(web::delete().to(|| async { HttpResponse::Ok().body("Delete") }))
+                        .route(web::put().to(|| async { HttpResponse::Ok().body("Put") })),
+                )
             })
             .bind("127.0.0.1:65534")
             .unwrap()
@@ -23,6 +20,7 @@ mod project {
             .unwrap()
         });
 
+        // _side_running_server.await?;
         Ok(())
     }
 }
