@@ -17,7 +17,7 @@ futures = "*"
 walkdir = "*"
 rayon = "*"
 
-actix = "*"
+actix-web = "*"
 axum = { version = "*", features = ["ws"] }
 
 reqwest = { version = "*", features = ["json"] }
