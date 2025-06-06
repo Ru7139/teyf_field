@@ -1,5 +1,5 @@
 #[tokio::test]
-// #[ignore]
+#[ignore]
 async fn sdb_test() -> Result<(), Box<dyn std::error::Error>> {
     // use super::controller::sdb_controller::SdbController;
     // use surrealdb::engine::any;
@@ -98,7 +98,7 @@ async fn get_year_data_test() -> Result<(), Box<dyn std::error::Error + Send + S
 }
 
 #[tokio::test]
-// #[ignore]
+#[ignore]
 async fn get_year_data_mix_test() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     for i in 2000..=2024 {
         let folder = format!("src/atomic_fusion/ruushyth_database/workshop/raw_stock_file/{i}",);

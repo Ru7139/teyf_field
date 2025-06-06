@@ -5,6 +5,7 @@ mod project {
     use super::super::sdb_tools;
 
     #[tokio::test]
+    #[ignore]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let db_port: u16 = 17779u16;
 

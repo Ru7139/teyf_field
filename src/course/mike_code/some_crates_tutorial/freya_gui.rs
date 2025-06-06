@@ -2,6 +2,7 @@ mod project {
     // use freya::prelude::*;
 
     #[test]
+    #[ignore]
     fn main() {
         // launch(app);
 

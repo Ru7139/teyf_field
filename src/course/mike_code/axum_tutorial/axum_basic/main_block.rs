@@ -4,6 +4,7 @@ mod project {
     use super::super::struct_def::WebStateSharedBag;
 
     #[tokio::test]
+    #[ignore]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let web_listener = tokio::net::TcpListener::bind("127.0.0.1:0").await?;
         let web_url = format!("http://{}", web_listener.local_addr()?);

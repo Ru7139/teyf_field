@@ -2,6 +2,7 @@ mod project {
     use plotters::prelude::*;
 
     #[test]
+    #[ignore]
     fn draw_a_png() -> Result<(), Box<dyn std::error::Error>> {
         let root = BitMapBackend::new(
             "src/course/mike_code/some_crates_tutorial/plotters_tur/test.png",

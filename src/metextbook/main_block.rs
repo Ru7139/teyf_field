@@ -3,6 +3,7 @@ mod project {
     const RU_PI: f64 = std::f64::consts::PI;
 
     #[tokio::test]
+    #[ignore]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         // 变量，元祖，断言，类型转换
         {

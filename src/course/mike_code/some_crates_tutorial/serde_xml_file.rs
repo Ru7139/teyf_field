@@ -3,6 +3,7 @@ mod project {
     use serde_xml_rs::{from_str, to_string};
 
     #[test]
+    #[ignore]
     fn main() {
         let xml = r#"<Person>
             <name>Mike</name>

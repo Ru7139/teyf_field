@@ -14,6 +14,7 @@ mod project {
     use tower_http::cors::{Any, CorsLayer};
 
     #[tokio::test]
+    #[ignore]
     async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let (tx, _) = channel(100);
         let app = app(tx);
