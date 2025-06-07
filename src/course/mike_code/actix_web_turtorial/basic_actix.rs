@@ -1,5 +1,6 @@
 mod project {
     use actix_web::{App, HttpResponse, HttpServer, Responder, web};
+    use serde::Deserialize;
 
     #[actix_web::test]
     async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -14,7 +15,8 @@ mod project {
                             .route(web::put().to(|| async { HttpResponse::Ok().body("Put") })),
                     )
                     .service(hello)
-                    .service(user)
+                    .service(user_id)
+                    .service(jet_rocket)
             })
             .bind("127.0.0.1:65534")
             .unwrap()
@@ -31,6 +33,13 @@ mod project {
 
         assert_eq!(rqs.text().await?, "id is 37");
 
+        let rsps = rqs_client
+            .get("http://127.0.0.1:65534/jet_rocket?destination=NewYork&code=U7787")
+            .send()
+            .await?;
+
+        assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");
+
         // _side_running_server.await?;
         Ok(())
     }
@@ -41,9 +50,21 @@ mod project {
     }
 
     #[actix_web::get("/user/{id}")]
-    async fn user(path: web::Path<i32>) -> impl Responder {
+    async fn user_id(path: web::Path<i32>) -> impl Responder {
         let id = path.into_inner();
         let msg = format!("id is {}", id);
         HttpResponse::Ok().body(msg)
+    }
+
+    #[actix_web::get("/jet_rocket")]
+    async fn jet_rocket(data: web::Query<JetRocket>) -> impl Responder {
+        let msg = format!("The rocket {} is heading {}", data.code, data.destination);
+        HttpResponse::Ok().body(msg)
+    }
+
+    #[derive(Deserialize)]
+    struct JetRocket {
+        destination: String,
+        code: String,
     }
 }
