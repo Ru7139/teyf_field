@@ -14,7 +14,7 @@ mod project {
                             .route(web::put().to(|| async { HttpResponse::Ok().body("Put") })),
                     )
                     .service(hello)
-                    .service(world)
+                    .service(user)
             })
             .bind("127.0.0.1:65534")
             .unwrap()
@@ -25,11 +25,11 @@ mod project {
 
         let rqs_client = reqwest::Client::new();
         let rqs = rqs_client
-            .get("http://127.0.0.1:65534/hello")
+            .get("http://127.0.0.1:65534/user/37")
             .send()
             .await?;
 
-        assert_eq!(rqs.text().await?, "hello");
+        assert_eq!(rqs.text().await?, "id is 37");
 
         // _side_running_server.await?;
         Ok(())
@@ -40,8 +40,10 @@ mod project {
         HttpResponse::Ok().body("hello")
     }
 
-    #[actix_web::get("/world")]
-    async fn world() -> impl Responder {
-        HttpResponse::Ok().body("world")
+    #[actix_web::get("/user/{id}")]
+    async fn user(path: web::Path<i32>) -> impl Responder {
+        let id = path.into_inner();
+        let msg = format!("id is {}", id);
+        HttpResponse::Ok().body(msg)
     }
 }
