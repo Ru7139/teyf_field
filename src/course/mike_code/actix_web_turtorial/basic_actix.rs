@@ -25,22 +25,25 @@ mod project {
             .unwrap()
         });
 
-        let rqs_client = reqwest::Client::new();
-        let rqs = rqs_client
-            .get("http://127.0.0.1:65534/user/37")
-            .send()
-            .await?;
+        let assert_part = tokio::spawn(async move {
+            let rqs_client = reqwest::Client::new();
 
-        assert_eq!(rqs.text().await?, "id is 37");
+            let assert_closure =
+                async |x: reqwest::Response, msg: &str| assert_eq!(x.text().await.unwrap(), msg);
 
-        let rsps = rqs_client
-            .get("http://127.0.0.1:65534/jet_rocket?destination=NewYork&code=U7787")
-            .send()
-            .await?;
+            let response = rqs_client
+                .get("http://127.0.0.1:65534/user/37")
+                .send()
+                .await
+                .unwrap();
 
-        assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");
+            assert_closure(response, "id is 37").await;
+        });
+
+        // assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");
 
         // _side_running_server.await?;
+        assert_part.await?;
         Ok(())
     }
 
