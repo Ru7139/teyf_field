@@ -28,16 +28,20 @@ mod project {
         let assert_part = tokio::spawn(async move {
             let rqs_client = reqwest::Client::new();
 
-            let assert_closure =
-                async |x: reqwest::Response, msg: &str| assert_eq!(x.text().await.unwrap(), msg);
+            let assert_get_closure = async |x: &reqwest::Client, webpage: &str, msg: &str| {
+                assert!(
+                    x.get(format!("http://127.0.0.1:65534/{}", webpage))
+                        .send()
+                        .await
+                        .unwrap()
+                        .text()
+                        .await
+                        .unwrap()
+                        == msg
+                )
+            };
 
-            let response = rqs_client
-                .get("http://127.0.0.1:65534/user/37")
-                .send()
-                .await
-                .unwrap();
-
-            assert_closure(response, "id is 37").await;
+            assert_get_closure(&rqs_client, "user/37", "id is 37").await;
         });
 
         // assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");
