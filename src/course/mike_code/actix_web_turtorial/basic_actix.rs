@@ -1,9 +1,12 @@
 mod project {
     use actix_web::{App, HttpResponse, HttpServer, Responder, web};
     use serde::Deserialize;
+    use surrealdb::engine::remote::ws::Ws;
 
     #[actix_web::test]
     async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        let _sdb = surrealdb::Surreal::new::<Ws>("127.0.0.1:65535").await?;
+
         let _side_running_server = tokio::spawn(async move {
             HttpServer::new(|| {
                 App::new()
@@ -41,14 +44,14 @@ mod project {
                 )
             };
 
-            assert_get_closure(&rqs_client, "user/37", "id is 37").await;
+            let user_id_webpage = "user/37";
+            let user_id_msg = "id is 37";
+            assert_get_closure(&rqs_client, user_id_webpage, user_id_msg).await;
 
             let jet_rocket_webpage = "jet_rocket?destination=NewYork&code=U7787";
             let jet_rocket_msg = "The rocket U7787 is heading NewYork";
             assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg).await;
         });
-
-        // assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");
 
         // _side_running_server.await?;
         assert_part.await?;
