@@ -29,19 +29,23 @@ mod project {
             let rqs_client = reqwest::Client::new();
 
             let assert_get_closure = async |x: &reqwest::Client, webpage: &str, msg: &str| {
-                assert!(
+                assert_eq!(
                     x.get(format!("http://127.0.0.1:65534/{}", webpage))
                         .send()
                         .await
                         .unwrap()
                         .text()
                         .await
-                        .unwrap()
-                        == msg
+                        .unwrap(),
+                    msg
                 )
             };
 
             assert_get_closure(&rqs_client, "user/37", "id is 37").await;
+
+            let jet_rocket_webpage = "jet_rocket?destination=NewYork&code=U7787";
+            let jet_rocket_msg = "The rocket U7787 is heading NewYork";
+            assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg).await;
         });
 
         // assert_eq!(rsps.text().await?, "The rocket U7787 is heading NewYork");

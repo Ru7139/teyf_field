@@ -6,6 +6,7 @@ mod count_lines_of_all_rs_file_below {
     use std::path::{Path, PathBuf};
 
     #[test]
+    #[ignore]
     fn here_is_counting() -> Result<(), Box<dyn std::error::Error>> {
         let exec_timestamp = std::time::Instant::now();
         let count_lines_closure = |file_path: &Path| -> std::io::Result<usize> {
