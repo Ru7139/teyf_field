@@ -60,7 +60,6 @@ mod project {
                 .unwrap();
         });
 
-        // _side_running_server.await?;
         assert_part.await?;
         Ok(())
     }
