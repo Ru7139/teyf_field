@@ -28,29 +28,36 @@ mod project {
             .unwrap()
         });
 
-        let assert_part = tokio::spawn(async move {
-            let rqs_client = reqwest::Client::new();
-
-            let assert_get_closure = async |x: &reqwest::Client, webpage: &str, msg: &str| {
+        let assert_get_closure =
+            async |x: &reqwest::Client,
+                   webpage: &str,
+                   msg: &str|
+                   -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 assert_eq!(
                     x.get(format!("http://127.0.0.1:65534/{}", webpage))
                         .send()
-                        .await
-                        .unwrap()
+                        .await?
                         .text()
-                        .await
-                        .unwrap(),
+                        .await?,
                     msg
-                )
+                );
+                Ok(())
             };
+
+        let assert_part = tokio::spawn(async move {
+            let rqs_client = reqwest::Client::new();
 
             let user_id_webpage = "user/37";
             let user_id_msg = "id is 37";
-            assert_get_closure(&rqs_client, user_id_webpage, user_id_msg).await;
+            assert_get_closure(&rqs_client, user_id_webpage, user_id_msg)
+                .await
+                .unwrap();
 
             let jet_rocket_webpage = "jet_rocket?destination=NewYork&code=U7787";
             let jet_rocket_msg = "The rocket U7787 is heading NewYork";
-            assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg).await;
+            assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg)
+                .await
+                .unwrap();
         });
 
         // _side_running_server.await?;
