@@ -29,41 +29,6 @@ mod project {
                 .unwrap()
         });
 
-        async fn assert_get_func(
-            x: &reqwest::Client,
-            webpage: &str,
-            msg: &str,
-        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-            assert_eq!(
-                x.get(format!("http://127.0.0.1:65534/{}", webpage))
-                    .send()
-                    .await?
-                    .text()
-                    .await?,
-                msg
-            );
-            Ok(())
-        }
-
-        async fn assert_post_func(
-            client: &reqwest::Client,
-            webpage: &str,
-            body: &impl Serialize,
-            msg: &str,
-        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-            assert_eq!(
-                client
-                    .post(format!("http://127.0.0.1:65534/{}", webpage))
-                    .json(body)
-                    .send()
-                    .await?
-                    .text()
-                    .await?,
-                msg
-            );
-            Ok(())
-        }
-
         let assert_part = tokio::spawn(async move {
             let rqs_client = reqwest::Client::new();
 
@@ -99,6 +64,9 @@ mod project {
         Ok(())
     }
 
+    //
+    // ----- ----- ----- ----- main ended here ----- ----- ----- ----- -----
+    //
     #[actix_web::get("/hello")]
     async fn hello() -> impl Responder {
         HttpResponse::Ok().body("hello")
@@ -124,7 +92,7 @@ mod project {
     }
 
     #[actix_web::post("/user_json_request")]
-    async fn user_json_request(user: actix_web::web::Json<User>) -> impl Responder {
+    async fn user_json_request(user: web::Json<User>) -> impl Responder {
         let msg = format!("User name: {}, User age: {}", user.name, user.age);
         HttpResponse::Ok().body(msg)
     }
@@ -134,4 +102,45 @@ mod project {
         name: String,
         age: u32,
     }
+
+    //
+    // ----- ----- ----- ----- web func defined here ----- ----- ----- ----- -----
+    //
+    async fn assert_get_func(
+        x: &reqwest::Client,
+        webpage: &str,
+        msg: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        assert_eq!(
+            x.get(format!("http://127.0.0.1:65534/{}", webpage))
+                .send()
+                .await?
+                .text()
+                .await?,
+            msg
+        );
+        Ok(())
+    }
+
+    async fn assert_post_func(
+        x: &reqwest::Client,
+        webpage: &str,
+        body: &impl Serialize,
+        msg: &str,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        assert_eq!(
+            x.post(format!("http://127.0.0.1:65534/{}", webpage))
+                .json(body)
+                .send()
+                .await?
+                .text()
+                .await?,
+            msg
+        );
+        Ok(())
+    }
+
+    //
+    // ----- ----- ----- ----- assert func defined here ----- ----- ----- ----- -----
+    //
 }
