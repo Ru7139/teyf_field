@@ -1,6 +1,6 @@
 mod project {
     use actix_web::{App, HttpResponse, HttpServer, Responder, web};
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use surrealdb::engine::remote::ws::Ws;
 
     #[actix_web::test]
@@ -20,65 +20,79 @@ mod project {
                     .service(hello)
                     .service(user_id)
                     .service(jet_rocket)
+                    .service(user_json_request)
             })
-            .bind("127.0.0.1:65534")
-            .unwrap()
-            .run()
-            .await
-            .unwrap()
+                .bind("127.0.0.1:65534")
+                .unwrap()
+                .run()
+                .await
+                .unwrap()
         });
 
-        let assert_get_closure =
-            async |x: &reqwest::Client,
-                   webpage: &str,
-                   msg: &str|
-                   -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-                assert_eq!(
-                    x.get(format!("http://127.0.0.1:65534/{}", webpage))
-                        .send()
-                        .await?
-                        .text()
-                        .await?,
-                    msg
-                );
-                Ok(())
-            };
+        async fn assert_get_func(
+            x: &reqwest::Client,
+            webpage: &str,
+            msg: &str,
+        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            assert_eq!(
+                x.get(format!("http://127.0.0.1:65534/{}", webpage))
+                    .send()
+                    .await?
+                    .text()
+                    .await?,
+                msg
+            );
+            Ok(())
+        }
 
-        let assert_post_closure =
-            async |x: &reqwest::Client,
-                   webpage: &str,
-                   // body:
-                   msg: &str|
-                   -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-                assert_eq!(
-                    x.post(format!("http://127.0.0.1:65534/{}", webpage))
-                        // .body()
-                        .send()
-                        .await?
-                        .text()
-                        .await?,
-                    msg
-                );
-                Ok(())
-            };
+        async fn assert_post_func(
+            client: &reqwest::Client,
+            webpage: &str,
+            body: &impl Serialize,
+            msg: &str,
+        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+            assert_eq!(
+                client
+                    .post(format!("http://127.0.0.1:65534/{}", webpage))
+                    .json(body)
+                    .send()
+                    .await?
+                    .text()
+                    .await?,
+                msg
+            );
+            Ok(())
+        }
 
         let assert_part = tokio::spawn(async move {
             let rqs_client = reqwest::Client::new();
 
             let user_id_webpage = "user/37";
             let user_id_msg = "id is 37";
-            assert_get_closure(&rqs_client, user_id_webpage, user_id_msg)
+            assert_get_func(&rqs_client, user_id_webpage, user_id_msg)
                 .await
                 .unwrap();
 
             let jet_rocket_webpage = "jet_rocket?destination=NewYork&code=U7787";
             let jet_rocket_msg = "The rocket U7787 is heading NewYork";
-            assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg)
+            assert_get_func(&rqs_client, jet_rocket_webpage, jet_rocket_msg)
                 .await
                 .unwrap();
 
-            let user_json_webpage = "/user_json_request";
+            let user_json_webpage = "user_json_request";
+            let user_json_body = User {
+                name: "Adolf".into(),
+                age: 27u32,
+            };
             let user_json_msg = "User name: Adolf, User age: 27";
+            assert_post_func(
+                &rqs_client,
+                user_json_webpage,
+                &user_json_body,
+                user_json_msg,
+            )
+                .await
+                .unwrap();
         });
 
         assert_part.await?;
@@ -110,12 +124,12 @@ mod project {
     }
 
     #[actix_web::post("/user_json_request")]
-    async fn json_request(user:actix_web::web::Json<User>) -> impl Responder {
+    async fn user_json_request(user: actix_web::web::Json<User>) -> impl Responder {
         let msg = format!("User name: {}, User age: {}", user.name, user.age);
         HttpResponse::Ok().body(msg)
     }
 
-    #[derive(Deserialize)]
+    #[derive(Serialize, Deserialize)]
     struct User {
         name: String,
         age: u32,
