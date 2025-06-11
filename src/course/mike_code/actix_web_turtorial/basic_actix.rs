@@ -44,6 +44,24 @@ mod project {
                 Ok(())
             };
 
+        let assert_post_closure =
+            async |x: &reqwest::Client,
+                   webpage: &str,
+                   // body:
+                   msg: &str|
+                   -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+                assert_eq!(
+                    x.post(format!("http://127.0.0.1:65534/{}", webpage))
+                        // .body()
+                        .send()
+                        .await?
+                        .text()
+                        .await?,
+                    msg
+                );
+                Ok(())
+            };
+
         let assert_part = tokio::spawn(async move {
             let rqs_client = reqwest::Client::new();
 
@@ -58,6 +76,9 @@ mod project {
             assert_get_closure(&rqs_client, jet_rocket_webpage, jet_rocket_msg)
                 .await
                 .unwrap();
+
+            let user_json_webpage = "/user_json_request";
+            let user_json_msg = "User name: Adolf, User age: 27";
         });
 
         assert_part.await?;
@@ -86,5 +107,17 @@ mod project {
     struct JetRocket {
         destination: String,
         code: String,
+    }
+
+    #[actix_web::post("/user_json_request")]
+    async fn json_request(user:actix_web::web::Json<User>) -> impl Responder {
+        let msg = format!("User name: {}, User age: {}", user.name, user.age);
+        HttpResponse::Ok().body(msg)
+    }
+
+    #[derive(Deserialize)]
+    struct User {
+        name: String,
+        age: u32,
     }
 }
