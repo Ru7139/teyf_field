@@ -1,4 +1,7 @@
 mod project {
+    use std::sync::Arc;
+    use tokio::sync::Mutex;
+
     use actix_web::{App, HttpResponse, HttpServer, Responder, web};
     use serde::{Deserialize, Serialize};
     use surrealdb::engine::remote::ws::Ws;
@@ -8,8 +11,13 @@ mod project {
         let _sdb = surrealdb::Surreal::new::<Ws>("127.0.0.1:65535").await?;
 
         let _side_running_server = tokio::spawn(async move {
-            HttpServer::new(|| {
+            let web_shared_bag = ArcBag {
+                temp_counter: Arc::new(Mutex::new(0u32)),
+            };
+
+            HttpServer::new(move || {
                 App::new()
+                    .app_data(web::Data::new(web_shared_bag.clone()))
                     .service(
                         web::resource("/method")
                             .route(web::get().to(|| async { HttpResponse::Ok().body("Get") }))
@@ -22,6 +30,7 @@ mod project {
                     .service(jet_rocket)
                     .service(user_json_request)
                     .service(response_json)
+                    .service(arc_bag_temp_counter_add_one)
             })
             .bind("127.0.0.1:65534")
             .unwrap()
@@ -69,6 +78,12 @@ mod project {
             assert_get_func(&rqs_client, response_json_webpage, &response_json_msg)
                 .await
                 .unwrap();
+
+            let temp_counter_add_webapge = "arc_bag_temp_counter_add_one";
+            let temp_counter_add_msg = "temp counter added one, now temp counter is 1";
+            assert_get_func(&rqs_client, temp_counter_add_webapge, temp_counter_add_msg)
+                .await
+                .unwrap()
         });
 
         assert_part.await?;
@@ -89,6 +104,17 @@ mod project {
     struct User {
         name: String,
         age: u32,
+    }
+
+    #[derive(Clone)]
+    struct ArcBag {
+        temp_counter: Arc<Mutex<u32>>,
+    }
+    impl ArcBag {
+        async fn add_one_on_temp_counter(&self) {
+            let mut counter = self.temp_counter.lock().await.clone();
+            counter += 1;
+        }
     }
 
     //
@@ -128,6 +154,18 @@ mod project {
         let person_json = serde_json::to_value(&person).unwrap();
         HttpResponse::Ok().json(person_json)
     }
+
+    #[actix_web::get("/arc_bag_temp_counter_add_one")]
+    async fn arc_bag_temp_counter_add_one(bag: web::Data<ArcBag>) -> impl Responder {
+        let counter = bag.temp_counter.lock().await.clone();
+        bag.add_one_on_temp_counter().await;
+        let msg = format!(
+            "temp counter added one, now temp counter is {}",
+            counter + 1
+        );
+        HttpResponse::Ok().body(msg)
+    }
+
     //
     // ----- ----- ----- ----- web func defined ended here ----- ----- ----- ----- -----
     //
