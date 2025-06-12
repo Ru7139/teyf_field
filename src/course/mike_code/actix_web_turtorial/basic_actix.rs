@@ -78,6 +78,23 @@ mod project {
     //
     // ----- ----- ----- ----- main ended here ----- ----- ----- ----- -----
     //
+
+    #[derive(Serialize, Deserialize)]
+    struct JetRocket {
+        destination: String,
+        code: String,
+    }
+
+    #[derive(Serialize, Deserialize)]
+    struct User {
+        name: String,
+        age: u32,
+    }
+
+    //
+    // ----- ----- ----- ----- struct defined ended here ----- ----- ----- ----- -----
+    //
+
     #[actix_web::get("/hello")]
     async fn hello() -> impl Responder {
         HttpResponse::Ok().body("hello")
@@ -96,22 +113,10 @@ mod project {
         HttpResponse::Ok().body(msg)
     }
 
-    #[derive(Serialize, Deserialize)]
-    struct JetRocket {
-        destination: String,
-        code: String,
-    }
-
     #[actix_web::post("/user_json_request")]
     async fn user_json_request(user: web::Json<User>) -> impl Responder {
         let msg = format!("User name: {}, User age: {}", user.name, user.age);
         HttpResponse::Ok().body(msg)
-    }
-
-    #[derive(Serialize, Deserialize)]
-    struct User {
-        name: String,
-        age: u32,
     }
 
     #[actix_web::get("/response_json")]
@@ -124,7 +129,7 @@ mod project {
         HttpResponse::Ok().json(person_json)
     }
     //
-    // ----- ----- ----- ----- web func defined here ----- ----- ----- ----- -----
+    // ----- ----- ----- ----- web func defined ended here ----- ----- ----- ----- -----
     //
     async fn assert_get_func(
         x: &reqwest::Client,
@@ -161,6 +166,6 @@ mod project {
     }
 
     //
-    // ----- ----- ----- ----- assert func defined here ----- ----- ----- ----- -----
+    // ----- ----- ----- ----- assert func defined ended here ----- ----- ----- ----- -----
     //
 }
