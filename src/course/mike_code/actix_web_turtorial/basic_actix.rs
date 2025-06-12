@@ -21,12 +21,13 @@ mod project {
                     .service(user_id)
                     .service(jet_rocket)
                     .service(user_json_request)
+                    .service(response_json)
             })
-                .bind("127.0.0.1:65534")
-                .unwrap()
-                .run()
-                .await
-                .unwrap()
+            .bind("127.0.0.1:65534")
+            .unwrap()
+            .run()
+            .await
+            .unwrap()
         });
 
         let assert_part = tokio::spawn(async move {
@@ -56,6 +57,16 @@ mod project {
                 &user_json_body,
                 user_json_msg,
             )
+            .await
+            .unwrap();
+
+            let response_json_webpage = "response_json";
+            let response_json_msg = serde_json::to_string(&User {
+                name: "Newton".into(),
+                age: 52u32,
+            })
+            .unwrap();
+            assert_get_func(&rqs_client, response_json_webpage, &response_json_msg)
                 .await
                 .unwrap();
         });
@@ -85,7 +96,7 @@ mod project {
         HttpResponse::Ok().body(msg)
     }
 
-    #[derive(Deserialize)]
+    #[derive(Serialize, Deserialize)]
     struct JetRocket {
         destination: String,
         code: String,
@@ -103,6 +114,15 @@ mod project {
         age: u32,
     }
 
+    #[actix_web::get("/response_json")]
+    async fn response_json() -> impl Responder {
+        let person = User {
+            name: "Newton".into(),
+            age: 52u32,
+        };
+        let person_json = serde_json::to_value(&person).unwrap();
+        HttpResponse::Ok().json(person_json)
+    }
     //
     // ----- ----- ----- ----- web func defined here ----- ----- ----- ----- -----
     //
