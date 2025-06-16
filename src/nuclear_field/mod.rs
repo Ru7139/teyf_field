@@ -1,2 +1,4 @@
 #![cfg(test)]
-pub mod stock_daily_boom;
+
+mod rander_snowflake_chart;
+mod stock_daily_boom;
