@@ -10,25 +10,29 @@ fn parse_time(t: &str) -> Date<Local> {
         .date()
 }
 
-const OUT_FILE_NAME: &str = "src/nuclear_field/rander_snowflake_chart/plotters-doc-data/stock.png";
+const OUT_FILE_NAME: &str = "src/nuclear_field/rander_snowflake_chart/plotters-doc-data/stock5.png";
 
 fn get_chart() -> Result<(), Box<dyn std::error::Error>> {
     let data = get_data();
-    let root = BitMapBackend::new(OUT_FILE_NAME, (1024, 768)).into_drawing_area();
-    root.fill(&WHITE)?;
+    let length = data.len();
+    let root = BitMapBackend::new(OUT_FILE_NAME, (1920, 1080)).into_drawing_area();
+    root.fill(&RGBColor(29, 38, 35))?;
 
     let (to_date, from_date) = (
         parse_time(data[0].0) + Duration::days(1),
-        parse_time(data[29].0) - Duration::days(1),
+        parse_time(data[length - 1].0) - Duration::days(1),
     );
 
     let mut chart = ChartBuilder::on(&root)
-        .x_label_area_size(40)
-        .y_label_area_size(40)
+        .x_label_area_size(50)
+        .y_label_area_size(50)
         .caption("MSFT", ("sans-serif", 50.0).into_font())
         .build_cartesian_2d(from_date..to_date, 110f32..135f32)?;
 
-    chart.configure_mesh().light_line_style(WHITE).draw()?;
+    chart
+        .configure_mesh()
+        .light_line_style(RGBColor(34, 38, 46))
+        .draw()?;
 
     chart.draw_series(
         data.iter().map(|x| {
