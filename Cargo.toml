@@ -38,8 +38,7 @@ futures-util = "*"
 tower-http = { version = "*", features = ["cors"] }
 
 plotters = "*"
-#freya = "*"
 
 num_cpus = "*"
 itertools = "*"
-rust_decimal = { version = "1.35", features = ["serde"] }
+rust_decimal = { version = "*", features = ["serde"] }
