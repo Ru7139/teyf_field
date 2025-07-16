@@ -8,37 +8,24 @@ serde = { version = "*", features = ["derive"] }
 serde_json = "*"
 serde_urlencoded = "*"
 serde-xml-rs = "*"
-
 chrono = "*"
-
 tokio = { version = "*", features = ["full"] }
 futures = "*"
-
+futures-util = "*"
 walkdir = "*"
 rayon = "*"
-
 actix-web = "*"
 axum = { version = "*", features = ["ws"] }
-
 reqwest = { version = "*", features = ["json"] }
-
 surrealdb = "*"
-
 quick-xml = "*"
 calamine = "*"
 zip = "*"
 docx-rs = "*"
-
-tauri = "*"
-dioxus = "*"
-
 rand = "*"
-
-futures-util = "*"
 tower-http = { version = "*", features = ["cors"] }
-
-plotters = "*"
-
 num_cpus = "*"
 itertools = "*"
 rust_decimal = { version = "*", features = ["serde"] }
+
+image = "*"
