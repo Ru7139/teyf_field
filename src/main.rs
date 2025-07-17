@@ -4,7 +4,7 @@ mod metextbook;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // list_apps();
-    let app_xxyy = get_window_bounds("Xcode").unwrap();
+    let app_xxyy = get_window_bounds("Finder").unwrap();
 
     std::process::Command::new("screencapture")
         .arg("-x")
