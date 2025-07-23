@@ -8,5 +8,7 @@ src/atomic_fusion/ruushyth_database/workshop/stock_fusion_db/stock_database_trun
 src/atomic_fusion/ruushyth_database/workshop/raw_stock_file
 src/nuclear_field/stock_daily_boom/download_file
 
+leptos-fs/target
+
 .DS_Store
 **/.DS_Store

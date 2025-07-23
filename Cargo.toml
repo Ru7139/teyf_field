@@ -27,6 +27,3 @@ tower-http = { version = "*", features = ["cors"] }
 num_cpus = "*"
 itertools = "*"
 rust_decimal = { version = "*", features = ["serde"] }
-
-image = "*"
-leptos = "*"
