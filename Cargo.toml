@@ -28,4 +28,4 @@ num_cpus = "*"
 itertools = "*"
 rust_decimal = { version = "*", features = ["serde"] }
 
-curve25519_dalek = "*"
+curve25519-dalek = "*"
