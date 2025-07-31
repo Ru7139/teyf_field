@@ -10,8 +10,8 @@ serde_urlencoded = "*"
 serde-xml-rs = "*"
 chrono = "*"
 tokio = { version = "*", features = ["full"] }
-futures = "*"
-futures-util = "*"
+
+
 walkdir = "*"
 rayon = "*"
 actix-web = "*"
@@ -22,10 +22,11 @@ quick-xml = "*"
 calamine = "*"
 zip = "*"
 docx-rs = "*"
-rand = "*"
+
 tower-http = { version = "*", features = ["cors"] }
 num_cpus = "*"
-itertools = "*"
+
 rust_decimal = { version = "*", features = ["serde"] }
 
-curve25519-dalek = "*"
+candle-core = "*"
+candle-nn = "*"
