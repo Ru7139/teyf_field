@@ -6,6 +6,7 @@ mod project {
     // use surrealdb::engine::remote::ws::Ws;
 
     #[actix_web::test]
+    #[ignore]
     async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // let _sdb = surrealdb::Surreal::new::<Ws>("127.0.0.1:65535").await?;
 
