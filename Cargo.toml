@@ -24,9 +24,7 @@ zip = "*"
 docx-rs = "*"
 
 tower-http = { version = "*", features = ["cors"] }
-num_cpus = "*"
+rand = "*"
 
 rust_decimal = { version = "*", features = ["serde"] }
-
-candle-core = "*"
-candle-nn = "*"
+futures-util = "*"
