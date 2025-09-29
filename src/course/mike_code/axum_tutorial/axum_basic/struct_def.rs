@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::prelude::Distribution;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -83,10 +83,10 @@ pub struct CosmosRocket { ship_type: CosmosRocketType, ship_code: u32 }
 pub struct TargetLocationXYZ { x: f64, y: f64, z: f64 }
 impl TargetLocationXYZ {
     pub fn change_to_random_location(&mut self, range: f64) {
-        let mut rng = rand::rng();
-        self.x = rng.random_range(-range..range);
-        self.y = rng.random_range(-range..range);
-        self.z = rng.random_range(-range..range);
+        let mut rng = rand::thread_rng();
+        self.x = rand::distributions::Uniform::from(-range..range).sample(&mut rng);
+        self.y = rand::distributions::Uniform::from(-range..range).sample(&mut rng);
+        self.z = rand::distributions::Uniform::from(-range..range).sample(&mut rng);
     }
 }
 
